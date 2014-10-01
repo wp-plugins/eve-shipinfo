@@ -1,0 +1,77 @@
+<?php
+
+abstract class EVEShipInfo_Admin_Page_Tab
+{
+   /**
+    * @var WP_Screen
+    */
+    protected $screen;
+    
+   /**
+    * @var EVEShipInfo
+    */
+    protected $plugin;
+    
+   /**
+    * @var EVEShipInfo_Admin_Page
+    */
+    protected $page;
+    
+	abstract public function render();
+
+	public function __construct(EVEShipInfo_Admin_Page $page)
+	{
+		$this->page = $page;
+		$this->plugin = EVEShipInfo::getInstance();
+		$this->screen = get_current_screen();
+	}
+	
+	public function getID()
+	{
+		return str_replace('EVEShipInfo_Admin_Page_'.$this->page->getID().'_', '', get_class($this));
+	}
+	
+	public function getURL($params=array())
+	{
+		return $this->page->getURL($this->getID(), $params);
+	}
+	
+   /**
+    * Creates a new settings manager that can be used to manage
+    * a set of configuration settings for the plugin.
+    * 
+    * @param string $id
+    * @return EVEShipInfo_Admin_SettingsManager
+    */
+	protected function createSettings($id)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_SettingsManager');
+		return new EVEShipInfo_Admin_SettingsManager($id);
+	}
+	
+	abstract public function getTitle();
+	
+	public function renderAlertSuccess($message)
+	{
+		return $this->renderAlert('updated', $message);
+	}
+	
+	public function renderAlertError($message)
+	{
+		return $this->renderAlert('error', $message);
+	}
+	
+	protected function renderAlert($type, $message)
+	{
+		return 
+		'<div class="'.$type.'">'.
+			$message.
+		'</div>';
+	}
+	
+	protected function createStuffBox($title=null)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_Page_StuffBox');
+		return new EVEShipInfo_Admin_Page_StuffBox($this, $title);
+	}
+}
