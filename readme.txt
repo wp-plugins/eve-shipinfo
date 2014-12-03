@@ -3,7 +3,7 @@ Contributors: AeonOfTime
 Tags: EVE Online
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -46,6 +46,9 @@ Note: to install the screenshots pack, you will need access to your wordpress's 
 example via FTP. You have to upload the "gallery" folder to the "eve-shipinfo" plugin folder.
 
 == Changelog ==
+
+= 1.2 =
+* Updated data files for Phoebe with the new ship skin variants
 
 = 1.1 =
 * Made the screenshots gallery optional

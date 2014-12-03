@@ -1,5 +1,20 @@
 <?php
+/**
+ * File containing the {@link EVEShipInfo_Collection_Ship} class.
+ * 
+ * @package EVEShipInfo
+ * @subpackage Collection
+ * @see EVEShipInfo_Collection_Ship
+ */
 
+/**
+ * Container for a single ship in the collection. This is the
+ * main hub to retrieve information about individual ships.  
+ * 
+ * @package EVEShipInfo
+ * @subpackage Collection
+ * @author Sebastian Mordziol <eve@aeonoftime.com>
+ */
 class EVEShipInfo_Collection_Ship
 {
    /**
@@ -7,6 +22,17 @@ class EVEShipInfo_Collection_Ship
     */
     protected static $instances = array();
     
+   /**
+    * Factory for creating a specific ship. Note: make sure
+    * that the specified ship ID exists before calling this,
+    * as it will throw an exception if the ship does not exist.
+    * 
+    * Each ship instance is only created once to avoid any
+    * overhead.
+    * 
+    * @param integer $shipID
+    * @return EVEShipInfo_Collection_Ship
+    */
     public static function create($shipID)
     {
         if(!isset(self::$instances[$shipID])) {
@@ -30,19 +56,35 @@ class EVEShipInfo_Collection_Ship
     */
     protected $collection;
     
+    const ERROR_SHIP_DOES_NOT_EXIST = 45872001;
+    
     protected function __construct($shipID)
     {
         $this->plugin = EVEShipInfo::getInstance();
         $this->collection = $this->plugin->createCollection();
         $this->id = $shipID;
         $this->name = $this->collection->getShipNameByID($shipID);
+        
+        if(empty($this->name)) {
+        	throw new Exception(
+        		'Unknown ship',
+        		self::ERROR_SHIP_DOES_NOT_EXIST	
+        	);
+        }
     }
     
+   /**
+    * The ship ID. This is the EVE typeID from the invtypes table.
+    * @return integer
+    */
     public function getID()
     {
         return $this->id;
     }
     
+   /**
+    * @return string
+    */
     public function getName()
     {
         return $this->name;
@@ -131,6 +173,144 @@ class EVEShipInfo_Collection_Ship
     public function getPowerOutput($units=false)
     {
     	return $this->getAttributeValue('powerOutput', $units);
+    }
+    
+    public function getPowerLoad()
+    {
+    	return $this->getAttributeValue('powerLoad');
+    }
+    
+    public function getPowerToSpeed()
+    {
+    	return $this->getAttribute('powerToSpeed');
+    }
+    
+    public function getStructureKineticResistance($units=false)
+    {
+    	return $this->getXYResistance('structure', 'kinetic', $units);
+    }
+    
+    public function getStructureEmResistance($units=false)
+    {
+    	return $this->getXYResistance('structure', 'em', $units);
+    }
+    
+    public function getStructureThermalResistance($units=false)
+    {
+    	return $this->getXYResistance('structure', 'thermal', $units);
+    }
+    
+    public function getStructureExplosiveResistance($units=false)
+    {
+    	return $this->getXYResistance('structure', 'explosive', $units);
+    }
+    
+    public function getArmorKineticResistance($units=false)
+    {
+    	return $this->getXYResistance('armor', 'kinetic', $units);
+    }
+
+    public function getArmorEmResistance($units=false)
+    {
+    	return $this->getXYResistance('armor', 'em', $units);
+    }
+    
+    public function getArmorThermalResistance($units=false)
+    {
+    	return $this->getXYResistance('armor', 'thermal', $units);
+    }
+    
+    public function getArmorExplosiveResistance($units=false)
+    {
+    	return $this->getXYResistance('armor', 'explosive', $units);
+    }
+    
+    public function getShieldKineticResistance($units=false)
+    {
+    	return $this->getXYResistance('shield', 'kinetic', $units);
+    }
+    
+    public function getShieldEmResistance($units=false)
+    {
+    	return $this->getXYResistance('shield', 'em', $units);
+    }
+    
+    public function getShieldThermalResistance($units=false)
+    {
+    	return $this->getXYResistance('shield', 'thermal', $units);
+    }
+    
+    public function getShieldExplosiveResistance($units=false)
+    {
+    	return $this->getXYResistance('shield', 'explosive', $units);
+    }
+    
+   /**
+    * Retrieves the resistance value for the specified ship area
+    * and the specified damage type.
+    * 
+    * @param string $area The ship area: armor, shield, structure
+    * @param string $type The damage type: kinetic, em, thermal, explosive
+    * @param string $units
+    * @return EVEShipInfo_Collection_Ship_Attribute
+    */
+    public function getXYResistance($area, $type, $units=false)
+    {
+    	$area = strtolower($area);
+    	$type = ucfirst($type);
+    	
+    	if($area=='structure') {
+    		$area = '';
+    		$type = strtolower($type);
+    	}
+    	 
+    	$name = $area.$type.'DamageResonance';
+    	
+    	return $this->getAttribute($name, $units);
+    }
+    
+    public function getMeanKineticResistance($units=false)
+    {
+    	return $this->getMeanXResistance('kinetic', $units);
+    }
+    
+    public function getMeanEmResistance($units=false)
+    {
+    	return $this->getMeanXResistance('em', $units);
+    }
+    
+    public function getMeanThermalResistance($units=false)
+    {
+    	return $this->getMeanXResistance('thermal', $units);
+    }
+    
+    public function getMeanExplosiveResistance($units=false)
+    {
+    	return $this->getMeanXResistance('explosive', $units);
+    }
+    
+   /**
+    * Retrieves the average resistance value for the specified
+    * damage type.
+    * 
+    * @param string $type The damage type: kinetic, em, thermal, explosive
+    * @param boolean $units
+    * @return string
+    */
+    public function getMeanXResistance($type, $units=false)
+    {
+    	$total =
+    	$this->getXYResistance('structure', $type)+
+    	$this->getXYResistance('armor', $type)+
+    	$this->getXYResistance('shield', $type);
+    	 
+    	$average = number_format($total/3, 2);
+    	 
+    	if($units) {
+    		$average .= ' %';
+    	}
+    	 
+    	return $average;
     }
     
     protected $attributes = array();
@@ -440,6 +620,20 @@ class EVEShipInfo_Collection_Ship
     		'warpSpeed' => $this->getWarpSpeed(true),
     		'dronebaySize' => $this->getDronebaySize(true),
     		'droneBandwidth' => $this->getDroneBandwidth(true),
+    		'powerLoad' => $this->getPowerLoad(),
+    		'powerToSpeed' => $this->getPowerToSpeed(),
+    		'structureKineticResistance' => $this->getStructureKineticResistance(true),
+    		'structureEmResistance' => $this->getStructureEmResistance(true),
+    		'structureThermalResistance' => $this->getStructureThermalResistance(true),
+    		'structureExplosiveResistance' => $this->getStructureExplosiveResistance(true),
+    		'armorKineticResistance' => $this->getArmorKineticResistance(true),
+    		'armorEmResistance' => $this->getArmorEmResistance(true),
+    		'armorThermalResistance' => $this->getArmorThermalResistance(true),
+    		'armorExplosiveResistance' => $this->getArmorExplosiveResistance(true),
+    		'shieldKineticResistance' => $this->getShieldKineticResistance(true),
+    		'shieldEmResistance' => $this->getShieldEmResistance(true),
+    		'shieldThermalResistance' => $this->getShieldThermalResistance(true),
+    		'shieldExplosiveResistance' => $this->getShieldExplosiveResistance(true),
     		'screenshots' => array()
     	);
     	

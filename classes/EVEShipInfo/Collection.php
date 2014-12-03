@@ -1,5 +1,20 @@
 <?php
+/**
+ * File containing the {@link EVEShipInfo_Collection} class.
+ * 
+ * @package EVEShipInfo
+ * @subpackage Collection
+ * @link EVEShipInfo_Collection
+ */
 
+/**
+ * Handles the entire ship collection: offers an easy to use API
+ * to retrieve ships and other data like races and the like.
+ * 
+ * @package EVEShipInfo
+ * @subpackage Collection
+ * @author Sebastian Mordziol <eve@aeonoftime.com>
+ */
 class EVEShipInfo_Collection
 {
     const ERROR_CANNOT_OPEN_DATAFILE = 55478001;
