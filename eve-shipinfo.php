@@ -3,7 +3,7 @@
  * Plugin Name: EVE Shipinfo
  * Plugin URI: http://aeonoftime.com/EVE_Online_Tools/EVE-ShipInfo-WordPress-Plugin
  * Description: Puts an EVE Online ships database in your WordPress website, along with high quality screenshots and specialized shortcodes.
- * Version: 1.1
+ * Version: 1.2
  * Author: Sebastian Mordziol
  * Author URI: http://www.aeonoftime.com
  * License: GPLv3
