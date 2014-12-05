@@ -61,7 +61,8 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 			'debug' => 'no',
 			'column_headers' => 'yes',
 			'agility' => '',
-			'warpspeed' => ''
+			'warpspeed' => '',
+			'velocity' => ''
 		);
 	}
 	
@@ -211,6 +212,13 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
     	        'type' => 'text',
     	        'values' => $this->describeNumericExpressions()
 	    	),
+	    	'velocity' => array(
+	    		'descr' => __('The ship\'s maximum velocity to limit the list to.', 'EVEShipInfo').' '.
+	    				   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+	    		'optional' => true,
+	    		'type' => 'text',
+	    		'values' => $this->describeNumericExpressions()
+	    	)
 	    );
 	    
 	    return $attribs;
@@ -355,6 +363,11 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 		$warpspeed = trim($this->getAttribute('warpspeed'));
 		if(!empty($warpspeed)){
 		    $this->filter->selectWarpSpeed($warpspeed);
+		}
+		
+		$velocity = trim($this->getAttribute('velocity'));
+		if(!empty($velocity)) {
+			$this->filter->selectVelocity($velocity);
 		}
 	}
 	

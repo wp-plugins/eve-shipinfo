@@ -58,6 +58,13 @@ class EVEShipInfo_Shortcode_Gallery extends EVEShipInfo_Shortcode_ShipList
 			'type' => 'number'
 		);
 		
+		$atts['thumbnail_classes'] = array(
+			'descr' => __('Custom class names to add to each thumbnail container element in the generated markup.').' '.
+					   __('Separate class names with spaces.'),
+			'optional' => true,
+			'type' => 'text'
+		);
+		
 		return $atts;
 	}
 	

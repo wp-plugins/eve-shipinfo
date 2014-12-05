@@ -318,10 +318,92 @@ class EVEShipInfo_Collection_Ship
     protected $attributesInitialized = false;
     
    /**
+    * Retrieves the value of a ship's attribute. Available attributes are:
+    * 
+	* agility 
+	* armorEmDamageResonance 
+	* armorExplosiveDamageResonance 
+	* armorHP 
+	* armorKineticDamageResonance 
+	* armorThermalDamageResonance 
+	* armorUniformity 
+	* baseWarpSpeed 
+	* capacitorCapacity 
+	* capacitorNeedMultiplier 
+	* cpuLoad 
+	* cpuOutput 
+	* damage
+	* droneBandwidth 
+	* droneCapacity 
+	* emDamageResonance 
+	* explosiveDamageResonance 
+	* heatAttenuationHi
+	* heatAttenuationLow 
+	* heatAttenuationMed 
+	* heatCapacityHi 
+	* heatCapacityLow 
+	* heatCapacityMed 
+	* heatDissipationRateHi 
+	* heatDissipationRateLow 
+	* heatDissipationRateMed 
+	* heatGenerationMultiplier 
+	* hiSlots
+	* hp 
+	* kineticDamageResonance 
+	* launcherSlotsLeft 
+	* lowSlots
+	* mainColor 
+	* maxDirectionalVelocity 
+	* maxLockedTargets 
+	* maxPassengers 
+	* maxRangeBonus 
+	* maxTargetRange 
+	* maxVelocity 
+	* medSlots
+	* metaLevel 
+	* minTargetVelDmgMultiplier 
+	* powerLoad 
+	* powerOutput
+	* powerToSpeed 
+	* rechargeRate 
+	* requiredSkill1 
+	* requiredSkill1Level 
+	* rigSize 
+	* rigSlots 
+	* scanGravimetricStrength 
+	* scanLadarStrength 
+	* scanMagnetometricStrength 
+	* scanRadarStrength 
+	* scanResolution 
+	* scanSpeed 
+	* shieldCapacity 
+	* shieldEmDamageResonance 
+	* shieldExplosiveDamageResonance 
+	* shieldKineticDamageResonance
+	* shieldRechargeRate 
+	* shieldThermalDamageResonance 
+	* shieldUniformity 
+	* shipBonusCF 
+	* shipBonusCF2
+	* shipScanResistance 
+	* signatureRadius 
+	* structureUniformity 
+	* techLevel 
+	* thermalDamageResonance 
+	* turretSlotsLeft 
+	* typeColorScheme 
+	* uniformity 
+	* upgradeCapacity 
+	* upgradeSlotsLeft 
+	* warpCapacitorNeed 
+	* warpFactor 
+	* warpSpeedMultiplier 
+    * 
     * @param string $name
+    * @param boolean $units Whether to append the measurement units to the resulting value (if applicable)
     * @return EVEShipInfo_Collection_Ship_Attribute
     */
-    protected function getAttributeValue($name, $units=false)
+    public function getAttributeValue($name, $units=false)
     {
         $attr = $this->getAttribute($name);
         if(!$attr) {
@@ -581,6 +663,46 @@ class EVEShipInfo_Collection_Ship
     public function getDroneBandwidth($units=false)
     {
     	return $this->getAttributeValue('droneBandwidth', $units);
+    }
+
+   /**
+    * Retrieves the ship's max velocity.
+    * @param boolean $units Whether to append the measurement units to the value
+    * @return string
+    */
+    public function getVelocity($units=false)
+    {
+    	return $this->getAttributeValue('velocity', $units);
+    }
+    
+   /**
+    * Alias for <code>getVelocity</code>. 
+    * @param boolean $units Whether to append the measurement units to the value
+    * @return string
+    * @see getVelocity()
+    */
+    public function getSpeed($units=false)
+    {
+    	return $this->getVelocity($units);
+    }
+    
+   /**
+    * The amount of rig slots available on the ship.
+    * @return string
+    */
+    public function getRigSlots()
+    {
+    	return $this->getAttributeValue('rigSlots');
+    }
+    
+   /**
+    * The size of rig that can be fitted to the ship.
+    * @return string 
+    */
+    public function getRigSize()
+    {
+    	// FIXME add a reference for the possible return values
+    	return $this->getAttributeValue('rigSize');
     }
     
     public function exportData()

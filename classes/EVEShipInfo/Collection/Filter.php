@@ -45,6 +45,11 @@ class EVEShipInfo_Collection_Filter
 		return $this->setOrderBy('agility', $ascending);
 	}
 	
+	public function orderByVelocity($ascending=true)
+	{
+		return $this->setOrderBy('velocity', $ascending);
+	}
+	
 	public function orderByWarpSpeed($ascending=true)
 	{
 		return $this->setOrderBy('warpspeed', $ascending);
@@ -379,6 +384,24 @@ class EVEShipInfo_Collection_Filter
 		    return false;
 		}
 		
+		if(isset($this->velocity) && !$this->matchNumber($ship->getVelocity(), $this->velocity)) {
+			return false;
+		}
+		
+		$attribs = array_values($this->attributes);
+		$total = count($attribs);
+		for($i=0; $i<$total; $i++) {
+			$attrib = $attribs[$i];
+			$value = $ship->getAttributeValue($attrib['name']);
+			switch($attrib['type']) {
+				case 'numeric':
+					if(!$this->matchNumber($value, $attrib['expression'])) {
+						return false;
+					}
+					break;
+			}
+		}
+		
 		return true;	
 	}
 	
@@ -486,6 +509,7 @@ class EVEShipInfo_Collection_Filter
 				'group' => __('Group', 'EVEShipInfo'),
 				'name' => __('Name', 'EVEShipInfo'),
 				'warpspeed' => __('Warp speed', 'EVEShipInfo'),
+				'velocity' => __('Velocity', 'EVEShipInfo'),
 				'highslots' => __('High slots', 'EVEShipInfo'),
 				'medslots' => __('Med slots', 'EVEShipInfo'),
 				'lowslots' => __('Low slots', 'EVEShipInfo')
@@ -620,12 +644,21 @@ class EVEShipInfo_Collection_Filter
 		
 		return $this;
 	}
-
-	protected $agility;
 	
+	protected $attributes = array();
+
 	public function selectAgility($expression)
 	{
-		$this->agility = $expression;
+		$this->selectAttribute('agility', 'numeric', $expression);
+	}
+	
+	protected function selectAttribute($name, $type, $expression)
+	{
+		$this->attributes[] = array(
+			'name' => $name,
+			'type' => $type,
+			'expression' => $expression
+		);
 	}
 	
 	protected $warpSpeed;
@@ -633,6 +666,13 @@ class EVEShipInfo_Collection_Filter
 	public function selectWarpSpeed($expression)
 	{
 		$this->warpSpeed = $expression;
+	}
+	
+	protected $velocity;
+	
+	public function selectVelocity($expression)
+	{
+		$this->velocity = $expression;
 	}
 	
 	protected $highslots;

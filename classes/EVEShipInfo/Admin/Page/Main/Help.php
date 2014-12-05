@@ -9,6 +9,8 @@ class EVEShipInfo_Admin_Page_Main_Help extends EVEShipInfo_Admin_Page_Tab
 	
 	public function render()
 	{
-		return 'Bla bla';
+		return 
+		'<b>'.__('Welcome to the EVE ShipInfo documentation.').'</b> '.
+		__('Please choose a destination in the navigation above.');
 	}
 }
