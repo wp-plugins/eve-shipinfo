@@ -34,9 +34,17 @@ class EVEShipInfo_Collection
         128 => 'Ore'
     );
     
-    public function __construct()
+    public function __construct(EVEShipInfo_Plugin $plugin)
     {
-        $this->plugin = EVEShipInfo::getInstance();
+        $this->plugin = $plugin;
+    }
+    
+   /**
+    * @return EVEShipInfo_Plugin
+    */
+    public function getPlugin()
+    {
+    	return $this->plugin;
     }
     
    /**
@@ -111,7 +119,7 @@ class EVEShipInfo_Collection
         }
         
         $this->plugin->loadClass('EVEShipInfo_Collection_Ship');
-        return EVEShipInfo_Collection_Ship::create($shipID);
+        return EVEShipInfo_Collection_Ship::create($this->plugin, $this, $shipID);
     }
     
     public function getShipByName($shipName)

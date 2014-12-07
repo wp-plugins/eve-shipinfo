@@ -7,6 +7,12 @@
  */
 
 /**
+ * The main plugin interface
+ * @see EVEShipInfo_Plugin
+ */
+require_once dirname(__FILE__).'/EVEShipInfo/Plugin.php';
+
+/**
  * Main plugin class for the EVE ShipInfo plugin. Registers
  * all required hooks, and implements most of the functionality.
  * Some special functionality is split into subclasses.
@@ -19,7 +25,7 @@
  * @link http://www.aeonoftime.com
  * @link https://gist.github.com/brianoz/9105004
  */
-class EVEShipInfo
+class EVEShipInfo extends EVEShipInfo_Plugin
 {
    /**
     * The name of the request variable which is used to
@@ -59,10 +65,6 @@ class EVEShipInfo
 		return self::$instance;
 	}
 	
-	protected $dir;
-	
-	protected $url;
-	
 	protected $pluginFile;
 	
    /**
@@ -87,31 +89,6 @@ class EVEShipInfo
 		load_plugin_textdomain('EVEShipInfo', false, $this->dir.'/languages');
 	}
 	
-	public function getImageWidth()
-	{
-		return 750;
-	}
-	
-	public function getDir()
-	{
-	    return $this->dir;
-	}
-	
-	public function getURL()
-	{
-		return $this->url;
-	}
-	
-	public function getGalleryURL()
-	{
-		return $this->url.'/gallery';
-	}
-	
-	public function getGalleryPath()
-	{
-		return $this->dir.'/gallery';
-	}
-	
    /**
     * @var EVEShipInfo_Collection_Ship
     */
@@ -133,25 +110,6 @@ class EVEShipInfo
 	    }
 	    
 	    return $this->activeShip;
-	}
-	
-	protected $collection;
-	
-   /**
-    * Returns the ships collection instance that can be used to
-    * access the entire ships collection and retrieve information
-    * about ships.
-    * 
-    * @return EVEShipInfo_Collection
-    */
-	public function createCollection()
-	{
-	    if(!isset($this->collection)) {
-    	    $this->loadClass('EVEShipInfo_Collection');
-            $this->collection = new EVEShipInfo_Collection();
-	    }
-	    
-	    return $this->collection;
 	}
 	
    /**
@@ -775,27 +733,6 @@ var EVEShipInfo_Translation = {".
 	{
 		self::$jsIDCounter++;
 		return 'esi'.self::$jsIDCounter;
-	}
-	
-	public function compileAttributes($attributes)
-	{
-		$tokens = array();
-		foreach($attributes as $name => $value) {
-			if(empty($value)) {
-				continue;
-			}
-			
-			$value = str_replace('&#039;', "'", htmlspecialchars($value, ENT_QUOTES));
-			
-			$tokens[] = $name.'="'.$value.'"';
-		}
-		
-		return ' '.implode(' ', $tokens).' ';
-	}
-	
-	public function getCSSName($part)
-	{
-		return 'shipinfo-'.$part;
 	}
 	
 	protected $defaultSettings = array(

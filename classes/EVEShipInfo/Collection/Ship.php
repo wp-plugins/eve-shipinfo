@@ -33,10 +33,10 @@ class EVEShipInfo_Collection_Ship
     * @param integer $shipID
     * @return EVEShipInfo_Collection_Ship
     */
-    public static function create($shipID)
+    public static function create(EVEShipInfo_Plugin $plugin, EVEShipInfo_Collection $collection, $shipID)
     {
         if(!isset(self::$instances[$shipID])) {
-            self::$instances[$shipID] = new EVEShipInfo_Collection_Ship($shipID);
+            self::$instances[$shipID] = new EVEShipInfo_Collection_Ship($plugin, $collection, $shipID);
         }
         
         return self::$instances[$shipID];
@@ -58,10 +58,10 @@ class EVEShipInfo_Collection_Ship
     
     const ERROR_SHIP_DOES_NOT_EXIST = 45872001;
     
-    protected function __construct($shipID)
+    protected function __construct(EVEShipInfo_Plugin $plugin, EVEShipInfo_Collection $collection, $shipID)
     {
-        $this->plugin = EVEShipInfo::getInstance();
-        $this->collection = $this->plugin->createCollection();
+        $this->plugin = $plugin;
+        $this->collection = $collection;
         $this->id = $shipID;
         $this->name = $this->collection->getShipNameByID($shipID);
         
@@ -820,5 +820,46 @@ class EVEShipInfo_Collection_Ship
     	}
     	
     	return false;
+    }
+    
+   /**
+    * Checks whether this is a pirate faction ship.
+    * @return boolean
+    */
+    public function isPirate()
+    {
+    	if($this->getRaceID()==32) {
+    		return true;
+    	}
+    	
+    	return false;
+    }
+    
+   /**
+    * Checks whether this is a jove faction ship.
+    * @return boolean
+    */
+    public function isJove()
+    {
+    	if($this->getRaceID()==16) {
+    		return true;
+    	}
+    	
+    	return false;
+    }
+    
+   /**
+    * Checks whether this is a ship that can actually be
+    * flown in the game.
+    * 
+    * @return boolean
+    */
+    public function isPilotable()
+    {
+    	if($this->getProperty('published') != 1) {
+    		return false;
+    	}
+    	
+    	return true;
     }
 }

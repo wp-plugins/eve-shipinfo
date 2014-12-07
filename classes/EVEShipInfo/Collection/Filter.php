@@ -7,78 +7,118 @@ class EVEShipInfo_Collection_Filter
     */
 	protected $collection;
 	
-	protected $orderBy = 'name';
+   /**
+    * The key is whether the sort is the secondary sort field.
+    * By default there is no secondary sort field.
+    * @var array
+    */
+	protected $orderBy = array(
+	    false => 'name'
+    );
 	
-	protected $ascending = true;
+	protected $ascending = array(
+	    false => true
+	);
+	
+	protected $pilotable = null;
 	
 	public function __construct(EVEShipInfo_Collection $collection)
 	{
 		$this->collection = $collection;
+		$this->initVirtualGroups();
 	}
 	
-	public function getOrderBy()
+	public function getOrderBy($secondary=false)
 	{
-		return $this->orderBy;
+		return $this->orderBy[$secondary];
 	}
 	
-	public function getOrderDir()
+	public function getOrderDir($secondary=false)
 	{
-		if($this->ascending) {
+		if($this->ascending[$secondary]) {
 			return 'ascending';
 		}
 		
 		return 'descending';
 	}
 	
-	public function orderByName($ascending=true)
+	public function orderByName($ascending=true, $secondary=false)
 	{
-		return $this->setOrderBy('name', $ascending);
+		return $this->setOrderBy('name', $ascending, $secondary);
 	}
 	
-	public function orderByGroup($ascending=true)
+   /**
+    * Orders the list by the ship's group, e.g. "Frigate", "Battleship".
+    * 
+    * @param string $ascending
+    * @return EVEShipInfo_Collection_Filter
+    * @see orderByVirtualGroup()
+    */
+	public function orderByGroup($ascending=true, $secondary=false)
 	{
-		return $this->setOrderBy('group', $ascending);
+		return $this->setOrderBy('group', $ascending, $secondary);
 	}
 	
-	public function orderByAgility($ascending=true)
+   /**
+    * Orders the list by the filter-specific virtual groups:
+    * these allow a broader group selection than the regular
+    * ship groups, by grouping hull sizes together. For example,
+    * frigates and assault frigates are in the same frigate hull
+    * group.
+    * 
+    * @param string $ascending
+    * @return EVEShipInfo_Collection_Filter
+    * @see orderByGroup()
+    */
+	public function orderByVirtualGroup($ascending=true, $secondary=false)
 	{
-		return $this->setOrderBy('agility', $ascending);
+	    return $this->setOrderBy('virtualgroup', $ascending, $secondary);
 	}
 	
-	public function orderByVelocity($ascending=true)
+	public function orderByRace($ascending=true, $secondary=false)
 	{
-		return $this->setOrderBy('velocity', $ascending);
+		return $this->setOrderBy('race', $ascending, $secondary);
 	}
 	
-	public function orderByWarpSpeed($ascending=true)
+	public function orderByAgility($ascending=true, $secondary=false)
 	{
-		return $this->setOrderBy('warpspeed', $ascending);
+		return $this->setOrderBy('agility', $ascending, $secondary);
 	}
 	
-	public function orderByHighSlots($ascending=true)
+	public function orderByVelocity($ascending=true, $secondary=false)
 	{
-		return $this->setOrderBy('highslots', $ascending);
+		return $this->setOrderBy('velocity', $ascending, $secondary);
 	}
 	
-	public function orderByMedSlots($ascending=true)
+	public function orderByWarpSpeed($ascending=true, $secondary=false)
 	{
-	    return $this->setOrderBy('medslots', $ascending);
+		return $this->setOrderBy('warpspeed', $ascending, $secondary);
 	}
 	
-	public function orderByLowSlots($ascending=true)
+	public function orderByHighSlots($ascending=true, $secondary=false)
 	{
-	    return $this->setOrderBy('lowslots', $ascending);
+		return $this->setOrderBy('highslots', $ascending, $secondary);
 	}
 	
-	public function setOrderBy($field, $ascending=true)
+	public function orderByMedSlots($ascending=true, $secondary=false)
+	{
+	    return $this->setOrderBy('medslots', $ascending, $secondary);
+	}
+	
+	public function orderByLowSlots($ascending=true, $secondary=false)
+	{
+	    return $this->setOrderBy('lowslots', $ascending, $secondary);
+	}
+	
+	public function setOrderBy($field, $ascending=true, $secondary=false)
 	{
 		if(!isset($this->orderFields)) {
 			$this->getOrderFields();
 		}
 		
 		if(isset($this->orderFields[$field])) {
-			$this->orderBy = $field;
-			$this->ascending = $ascending;
+			$this->orderBy[$secondary] = $field;
+			$this->ascending[$secondary] = $ascending;
 		} else {
 			$this->addWarning(sprintf(__('Unknown order field %1$s.', 'EVEShipInfo'), '['.$field.']'));
 		}
@@ -159,7 +199,7 @@ class EVEShipInfo_Collection_Filter
     */
 	public function selectFrigates()
 	{
-		return $this->selectGroups($this->virtualGroups[999993]['groups']);
+		return $this->selectGroups($this->virtualGroups[9003]['groups']);
 	}
 	
    /**
@@ -170,75 +210,124 @@ class EVEShipInfo_Collection_Filter
     */
 	public function selectBattleships()
 	{
-		return $this->selectGroups($this->virtualGroups[999992]['groups']);
+		return $this->selectGroups($this->virtualGroups[9002]['groups']);
 	}
 	
-	protected $virtualGroups = array(
-		9001 => array(
-			'name' => 'All industrials',
-			'groups' => array(
-				28, // industrial
-				380, // deep space transport
-				463, // mining barge
-				513, // freighter
-				543, // exhumer
-				883, // capital industrial ships
-				902, // jump freighter
-				941, // industrial command ship
-				1202, // blockade runner
-			)
-		),
-		9002 => array(
-			'name' => 'All battleships',
-			'groups' => array(
-				27, // battleship
-				898, // black ops
-				900, // marauders
-			) 
-		),
-		9003 => array(
-			'name' => 'All frigates',
-			'groups' => array(
-				25, // frigates
-				324, // assault frigates
-				541, // interdictor
-				830, // covert ops
-				831, // interceptor
-				839, // electronic attack ship
-				1283, // expedition frigate
-			)
-		),
-		9004 => array(
-		    'name' => 'All capitals',
-		    'groups' => array(
-		    	883, // capital industrial ships
-		    	547, // carrier
-		    	485, // dreadnought
-		    	659, // supercarrier
-		    	30, // titan
+   /**
+    * Retrieves the virtual group ID for the specified ship.
+    * 
+    * @param EVEShipInfo_Collection_Ship $ship
+    * @return integer|NULL
+    */
+	public function getVirtualGroupID(EVEShipInfo_Collection_Ship $ship)
+	{
+		$groupID = $ship->getGroupID();
+		foreach($this->virtualGroups as $virtualGroupID => $def) {
+			if(in_array($groupID, $def['groups'])) {
+				return $virtualGroupID;
+			}
+		}
+		
+		return null;
+	}
+	
+	public function getVirtualGroupName(EVEShipInfo_Collection_Ship $ship)
+	{
+		$id = $this->getVirtualGroupID($ship);
+		if($id) {
+			return $this->virtualGroups[$id]['name'];
+		}
+		
+		return '';
+	}
+	
+	protected $virtualGroups;
+	
+	protected function initVirtualGroups()
+	{
+		$this->virtualGroups = array(
+			9001 => array(
+				'name' => __('All industrials'),
+				'groups' => array(
+					28, // industrial
+					380, // deep space transport
+					463, // mining barge
+					513, // freighter
+					543, // exhumer
+					883, // capital industrial ships
+					902, // jump freighter
+					941, // industrial command ship
+					1202, // blockade runner
+				)
+			),
+			9002 => array(
+				'name' => __('All battleships'),
+				'groups' => array(
+					27, // battleship
+					898, // black ops
+					900, // marauders
+				) 
+			),
+			9003 => array(
+				'name' => __('All frigates'),
+				'groups' => array(
+					25, // frigates
+					324, // assault frigates
+					541, // interdictor
+					830, // covert ops
+					831, // interceptor
+					893, // electronic attack ship
+					834, // stealth bombers
+					1283, // expedition frigate
+					1022, // prototype exploration ship
+				)
+			),
+			9004 => array(
+			    'name' => __('All capitals'),
+			    'groups' => array(
+			    	883, // capital industrial ships
+			    	547, // carrier
+			    	485, // dreadnought
+			    	659, // supercarrier
+			    	30, // titan
+			    )
+			),
+			9005 => array(
+			    'name' => __('All battlecruisers'),
+			    'groups' => array(
+			    	1201, // attack battlecruiser
+			    	419, // combat battlecruiser
+			    	540, // command ship
+			    )
+			),
+			9006 => array(
+			    'name' => __('All cruisers'),
+			    'groups' => array(
+			    	906, // combat recon ship
+			    	26, // cruiser
+			    	833, // force recon ship
+			    	358, // heavy assault cruiser
+			    	894, // heavy interdiction cruiser
+			    	832, // logistics
+			    	963, // strategic cruiser
+			    )
+			),
+		    9007 => array(
+		    	'name' => __('All destroyers'),
+		        'groups' => array(
+		        	420, // destroyer
+		        )
+		    ),
+		    9008 => array(
+		    	'name' => __('Miscellaneous'),
+		        'groups' => array(
+		        	31,
+		            237,
+		            29
+		        )
 		    )
-		),
-		9005 => array(
-		    'name' => 'All battlecruisers',
-		    'groups' => array(
-		    	1201, // attack battlecruiser
-		    	419, // combat battlecruiser
-		    	540, // command ship
-		    )
-		),
-		9006 => array(
-		    'name' => 'All cruisers',
-		    'groups' => array(
-		    	906, // combat recon ship
-		    	26, // cruiser
-		    	833, // force recon ship
-		    	358, // heavy assault cruiser
-		    	894, // heavy interdiction cruiser
-		    	832, // logistics
-		    	963, // strategic cruiser
-		    )
-		)
-	);
+	    );
+	}
 	
 	protected $groups;
 	
@@ -266,7 +355,7 @@ class EVEShipInfo_Collection_Filter
     */
 	public function selectIndustrials()
 	{
-		return $this->selectGroups($this->virtualGroups[99991]['groups']);		
+		return $this->selectGroups($this->virtualGroups[9001]['groups']);		
 	}
 	
 	public function selectGroupNames($names)
@@ -313,6 +402,8 @@ class EVEShipInfo_Collection_Filter
 		return isset($this->groups[$groupID]);
 	}
 	
+	protected $sortMode;
+	
    /**
     * Retrieves an indexed array with all ship object instances
     * matching the current criteria.
@@ -331,8 +422,14 @@ class EVEShipInfo_Collection_Filter
 			}
 		}	
 		
-		usort($result, array($this, 'sortResults'));
+		if(isset($this->orderBy[true])) {
+		    $this->sortMode = true;
+		    usort($result, array($this, 'sortResults'));
+		}
 
+		$this->sortMode = false;
+		usort($result, array($this, 'sortResults'));
+		
 		if($this->limit > 0 && $this->limit <= $total) {
 		    return array_slice($result, 0, $this->limit);
 		}
@@ -357,6 +454,10 @@ class EVEShipInfo_Collection_Filter
 		
 		// we want to limit by race
 		if(isset($this->races) && !in_array($ship->getRaceID(), $this->races)) {
+			return false;
+		}
+		
+		if(isset($this->excludeRaces) && in_array($ship->getRaceID(), $this->excludeRaces)) {
 			return false;
 		}
 		
@@ -400,6 +501,12 @@ class EVEShipInfo_Collection_Filter
 					}
 					break;
 			}
+		}
+		
+	    if($this->pilotable===true && !$ship->isPilotable()) {
+			return false;
+	    } else if($this->pilotable===false && $ship->isPilotable()) {
+	        return false;
 		}
 		
 		return true;	
@@ -512,7 +619,9 @@ class EVEShipInfo_Collection_Filter
 				'velocity' => __('Velocity', 'EVEShipInfo'),
 				'highslots' => __('High slots', 'EVEShipInfo'),
 				'medslots' => __('Med slots', 'EVEShipInfo'),
-				'lowslots' => __('Low slots', 'EVEShipInfo')
+				'lowslots' => __('Low slots', 'EVEShipInfo'),
+			    'race' => __('Race', 'EVEShipInfo'),
+			    'virtualgroup' => __('Virtual group', 'EVEShipInfo')
 			); 
 		}
 		
@@ -551,11 +660,11 @@ class EVEShipInfo_Collection_Filter
 	protected function sortResults(EVEShipInfo_Collection_Ship $a, EVEShipInfo_Collection_Ship $b)
 	{
 		$dir = 1;
-		if(!$this->ascending) {
+		if(!$this->ascending[$this->sortMode]) {
 			$dir = -1;
 		}
 		
-		switch($this->orderBy) {
+		switch($this->orderBy[$this->sortMode]) {
 			case 'agility':
 				$aVal = $a->getAgility();
 				$bVal = $b->getAgility();
@@ -585,6 +694,21 @@ class EVEShipInfo_Collection_Filter
 		        $aVal = $a->getLowSlots();
 		        $bVal = $b->getLowSlots();
 		        break;
+		        
+		    case 'race':
+		        $aVal = $a->getRaceName();
+		        $bVal = $b->getRaceName();
+		        break;
+		        
+		    case 'class':
+		        $aVal = $a->getGroupName();
+		        $bVal = $b->getGroupName();
+		        break;
+		        
+		    case 'virtualgroup':
+		        $aVal = $this->getVirtualGroupName($a);
+		        $bVal = $this->getVirtualGroupName($b);
+		        break;
 			         
 			case 'name':
 			default:
@@ -593,15 +717,7 @@ class EVEShipInfo_Collection_Filter
 				break;
 		}
 		
-		if($aVal > $bVal) {
-			return 1*$dir;
-		}
-		
-		if($aVal < $bVal) {
-			return -1*$dir;
-		}
-		
-		return 0;
+		return strnatcasecmp($aVal, $bVal);
 	}
 
 	protected $races;
@@ -639,7 +755,7 @@ class EVEShipInfo_Collection_Filter
 	public function selectRaceIDs($raceIDs)
 	{
 		foreach($raceIDs as $raceID) {
-			$this->selectRace($raceID);
+			$this->selectRaceByID($raceID);
 		}
 		
 		return $this;
@@ -698,9 +814,15 @@ class EVEShipInfo_Collection_Filter
 	
 	protected $search;
 	
+   /**
+    * Sets search terms to limit the selection to, as terms separated with spaces.
+    * @param string $terms
+    * @return EVEShipInfo_Collection_Filter
+    */
 	public function selectSearch($terms)
 	{
 		$this->search = $terms;
+		return $this;
 	}
 	
 	public function getGroupNames()
@@ -720,5 +842,169 @@ class EVEShipInfo_Collection_Filter
 		} 
 		
 		return $names;
+	}
+
+   /**
+    * Limits the selection to minmatar ships.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function selectMinmatar()
+	{
+		return $this->selectRaceByName('Minmatar');
+	}
+	
+   /**
+    * Limits the selection to armarr ships.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function selectAmarr()
+	{
+		return $this->selectRaceByName('Amarr');
+	}
+	
+   /**
+    * Limits the selection to gallente ships.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function selectGallente()
+	{
+		return $this->selectRaceByName('Gallente');
+	}
+	
+	/**
+	 * Limits the selection to caldari ships.
+	 * @return EVEShipInfo_Collection_Filter
+	 */
+	public function selectCaldari()
+	{
+		return $this->selectRaceByName('Caldari');
+	}
+	
+	/**
+	 * Limits the selection to ore ships.
+	 * @return EVEShipInfo_Collection_Filter
+	 */
+	public function selectOre()
+	{
+	    return $this->selectRaceByName('Ore');
+	}
+	
+	/**
+	 * Limits the selection to jove ships.
+	 * @return EVEShipInfo_Collection_Filter
+	 */
+	public function selectJove()
+	{
+	    return $this->selectRaceByName('Jove');
+	}
+
+   /**
+    * Selects only ships that can actually be flown with the right skills.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function selectPilotable()
+	{
+		$this->pilotable = true;
+		return $this;
+	}
+	
+   /**
+    * Selects only ships that cannot actually be flown ingame. 
+    * Note: a noteworthy exception is the pods, which are set
+    * as not pilotable for some reason.
+    * 
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function selectUnpilotable()
+	{
+		$this->pilotable = false;
+		return $this;
+	}
+
+   /**
+    * Excludes minmatar ships from the selection.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectMinmatar()
+	{
+		return $this->deselectRaceByName('Minmatar');
+	}
+	
+   /**
+    * Excludes amarr ships from the selection.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectAmarr()
+	{
+		return $this->deselectRaceByName('Amarr');
+	}
+	
+   /**
+    * Excludes gallente ships from the selection.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectGallente()
+	{
+		return $this->deselectRaceByName('Gallente');
+	}
+	
+	/**
+	 * Excludes caldari ships from the selection.
+	 * @return EVEShipInfo_Collection_Filter
+	 */
+	public function deselectCaldari()
+	{
+		return $this->deselectRaceByName('Caldari');
+	}
+	
+   /**
+    * Excludes ore ships from the selection.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectOre()
+	{
+		return $this->deselectRaceByName('Ore');
+	}
+	
+   /**
+    * Excludes jove ships from the selection.
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectJove()
+	{
+		return $this->deselectRaceByName('Jove');
+	}
+	
+   /**
+    * Excludes a ship race from the selection by its name.
+    * @param string $name
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectRaceByName($name)
+	{
+	    $id = $this->collection->getRaceIDByName($name);
+	    return $this->deselectRaceByID($id);
+	}
+
+	protected $excludeRaces;
+	
+   /**
+    * Excludes a ship race from the selection by its ID.
+    * @param string $raceID
+    * @return EVEShipInfo_Collection_Filter
+    */
+	public function deselectRaceByID($raceID)
+	{
+		if($this->collection->raceIDExists($raceID)) {
+			if(!isset($this->excludeRaces)) {
+				$this->excludeRaces = array();
+			}
+			
+			if(!in_array($raceID, $this->excludeRaces)) {
+				$this->excludeRaces[] = $raceID;
+			}
+		}
+		
+		return $this;
 	}
 }
