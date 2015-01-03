@@ -3,7 +3,7 @@ Contributors: AeonOfTime
 Tags: EVE Online
 Requires at least: 3.5
 Tested up to: 4.1
-Stable tag: 1.2
+Stable tag: 1.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
