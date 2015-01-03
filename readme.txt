@@ -3,7 +3,7 @@ Contributors: AeonOfTime
 Tags: EVE Online
 Requires at least: 3.5
 Tested up to: 4.1
-Stable tag: 1.3
+Stable tag: 1.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -47,6 +47,9 @@ example via FTP. You have to upload the "gallery" folder to the "eve-shipinfo" p
 
 
 == Changelog ==
+
+= 1.4 = 
+* Updated data files for Rhea with new ships
 
 = 1.3 =
 * Added more filtering options to the ships collection filtering API (Cargo bay size, Drone bandwidth, Drone bay size, Piloteable, Tech level, Turret slots, Launcher slots)
