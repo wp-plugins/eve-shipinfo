@@ -266,7 +266,7 @@ var EVEShipInfo_Ship = function(collection, data)
 	this.RenderTab_Attributes = function(el)
 	{
 		launchers = this.TL('No launchers');
-		if(this.data.launcherHardpoints > 0) {
+		if(this.data.launcherHardpoints == 1) {
 			launchers = this.TL('1 launcher');
 		} else if(this.data.launcherHardpoints > 0) {
 			launchers = this.TL('X launchers').replace('%s', this.data.launcherHardpoints);

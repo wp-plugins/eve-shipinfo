@@ -33,34 +33,34 @@ class EVEShipInfo_Shortcode_Gallery extends EVEShipInfo_Shortcode_ShipList
 	{
 		$atts = parent::_describeAttributes();
 		
-		unset($atts['show']);
-		unset($atts['column_headers']);
-		unset($atts['template']);
+		unset($atts['settings']['attribs']['show']);
+		unset($atts['settings']['attribs']['column_headers']);
+		unset($atts['settings']['attribs']['template']);
 		
-		$atts['columns'] = array(
+		$atts['settings']['attribs']['columns'] = array(
 		    'descr' => __('The amount of columns for the gallery grid.', 'EVEShipInfo'),
 		    'optional' => true,
 		    'type' => 'number'
 		);
 		
-		$atts['rows'] = array(
+		$atts['settings']['attribs']['rows'] = array(
 			'descr' => __('The amount of rows to limit the gallery grid to.', 'EVEShipInfo').' '.
-					   __('If not specified, all available ships will be shown.').' '.
+					   __('If not specified, all available ships will be shown.', 'EVEShipInfo').' '.
 					   sprintf(__('This is similar to the regular list\'s %1$s attribute, except the maximum amount of ships is determined by the columns multiplied by rows.', 'EVEShipInfo'), '<code>show</code>'),
 			'optional' => true,
 			'type' => 'number'
 		);
 		
-		$atts['thumbnail_size'] = array(
-			'descr' => __('The pixel width for the thumbnails.').' '.
+		$atts['settings']['attribs']['thumbnail_size'] = array(
+			'descr' => __('The pixel width for the thumbnails.', 'EVEShipInfo').' '.
 					   sprintf(__('This can be any positive value up to the maximum size of %1$s.', 'EVEShipInfo'), '<code>'.$this->getMaximumThumbSize().'</code>'),
 			'optional' => true,
 			'type' => 'number'
 		);
 		
-		$atts['thumbnail_classes'] = array(
-			'descr' => __('Custom class names to add to each thumbnail container element in the generated markup.').' '.
-					   __('Separate class names with spaces.'),
+		$atts['settings']['attribs']['thumbnail_classes'] = array(
+			'descr' => __('Custom class names to add to each thumbnail container element in the generated markup.', 'EVEShipInfo').' '.
+					   __('Separate class names with spaces.', 'EVEShipInfo'),
 			'optional' => true,
 			'type' => 'text'
 		);

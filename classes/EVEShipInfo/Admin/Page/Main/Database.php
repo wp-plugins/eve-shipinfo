@@ -7,18 +7,39 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
 		return __('Database reference', 'EVEShipInfo');
 	}
 	
+   /**
+    * @var EVEShipInfo_Collection
+    */
+	protected $collection;
+	
+   /**
+    * @var EVEShipInfo_Collection_Filter
+    */
+	protected $filter;
+	
 	public function render()
 	{
-		$collection = $this->plugin->createCollection();
+		$this->collection = $this->plugin->createCollection();
+		$this->filter = $this->collection->createFilter();
 		
-		$races = $collection->getRaces();
 		$html = 
 		'<p>'.
 			__('The following is a <b>reference for items</b> you can use in combination with the plugin\'s shortcodes.', 'EVEShipInfo').' '.
 			__('Whenever you need to specify names of things like races or ship groups, you can look them up here.', 'EVEShipInfo').' '.
 			__('Note:', 'EVEShipInfo').' '.__('These lists are generated dynamically from the integrated ships database, so they will always be accurate for the version of the plugin you have installed.', 'EVEShipInfo').
 		'</p>'.
-		'<h3>'.__('Races', 'EVEShipInfo').'</h3>'.
+		$this->renderRaces().
+		$this->renderShipGroups().
+		$this->renderShips();
+		
+		return $html;
+	}
+	
+	protected function renderRaces()
+	{
+		$races = $this->collection->getRaces();
+		
+		$boxHTML = 
 		'<table class="wp-list-table widefat">'.
 			'<thead>'.	
 				'<tr>'.
@@ -29,25 +50,28 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
 			'</thead>'.
 			'<tbody>';
 				foreach($races as $id => $name) {
-					$html .=
+					$boxHTML .=
 					'<tr>'.
 						'<td>'.$id.'</td>'.
 						'<td>'.$name.'</td>'.
 						'<td><code>'.strtolower($name).'</code></td>'.
 					'</tr>';
 				}
-				$html .=
+				$boxHTML .=
 			'</tbody>'.
 		'</table>';
 				
-		$filter = $collection->createFilter();
-		$groups = $filter->getGroups();
-		$html .=
-		'<h3>'.__('Groups', 'EVEShipInfo').'</h3>'.
-		'<p>'.
-			__('These are all available ship groups in the database.', 'EVEShipInfo').' '.
-			__('Note:', 'EVEShipInfo').' '.__('The first groups in the list are special convenience groups that automatically select all ship groups of the same hull size.', 'EVEShipInfo').
-		'</p>'.
+		return $this->ui->createStuffBox(__('Races', 'EVEShipInfo'))
+			->setContent($boxHTML)
+			->setCollapsed()
+			->render();
+	}
+	
+	protected function renderShipGroups()
+	{
+		$groups = $this->filter->getGroups();
+		
+		$html =
 		'<table class="wp-list-table widefat">'.
 			'<thead>'.
 				'<tr>'.
@@ -60,7 +84,7 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
 			'<tbody>';
 				foreach($groups as $id => $name) {
 					$special = '';
-					$virtual = $filter->getVirtualGroupGroupNames($id);
+					$virtual = $this->filter->getVirtualGroupGroupNames($id);
 					if($virtual) {
 						$special = implode(', ', $virtual);
 					}
@@ -76,13 +100,22 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
 				$html .=
 			'</tbody>'.
 		'</table>';
+				
+		return $this->ui->createStuffBox(__('Ship groups', 'EVEShipInfo'))
+			->setAbstract(
+			    __('These are all available ship groups in the database.', 'EVEShipInfo').' '.
+		    	__('Note:', 'EVEShipInfo').' '.__('The first groups in the list are special convenience groups that automatically select all ship groups of the same hull size.', 'EVEShipInfo')
+		    )
+			->setContent($html)
+			->setCollapsed()
+			->render();
+	}
+	
+	protected function renderShips()
+	{
+		$ships = $this->filter->getShips();
 		
-		$ships = $filter->getShips();
-		$html .=
-		'<h3>'.__('Ships', 'EVEShipInfo').'</h3>'.
-		'<p>'.
-			__('These are all available ships in the database.', 'EVEShipInfo').' '.
-		'</p>'.
+		$html =
 		'<table class="wp-list-table widefat">'.
 			'<thead>'.
 				'<tr>'.
@@ -102,6 +135,9 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
 			'</tbody>'.
 		'</table>';
 						
-		return $html;
+		return $this->ui->createStuffBox(__('Ships', 'EVEShipInfo'))
+			->setAbstract(__('These are all available ships in the database.', 'EVEShipInfo'))
+			->setCollapsed()
+			->render();
 	}
 }

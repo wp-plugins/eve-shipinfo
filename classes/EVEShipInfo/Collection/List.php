@@ -30,7 +30,14 @@ class EVEShipInfo_Collection_List
 			'highslots' => __('High slots', 'EVEShipInfo'),
 			'medslots' => __('Med slots', 'EVEShipInfo'),
 			'lowslots' => __('Low slots', 'EVEShipInfo'),
-			'group' => __('Group', 'EVEShipInfo')
+			'group' => __('Group', 'EVEShipInfo'),
+		    'cargobay' => __('Cargo bay', 'EVEShipInfo'),
+		    'dronebandwidth' => __('Drone bandwidth', 'EVEShipInfo'),
+		    'dronebay' => __('Drone bay', 'EVEShipInfo'),
+		    'turrets' => __('Turret slots', 'EVEShipInfo'),
+		    'launchers' => __('Launcher slots', 'EVEShipInfo'),
+		    'velocity' => __('Max velocity', 'EVEShipInfo'),
+		    'techlevel' => __('Tech level', 'EVEShipInfo')
 		);
 	}
 	
@@ -165,6 +172,18 @@ class EVEShipInfo_Collection_List
 		return $this->$method($ship);
 	}
 	
+	protected $showUnits = true;
+	
+   /**
+    * Disables unit labels for attributes that have specific units, like "M3".
+    * @return EVEShipInfo_Collection_List
+    */
+	public function disableUnits()
+	{
+		$this->showUnits = false;
+		return $this;
+	}
+	
 	protected function renderColumn_name(EVEShipInfo_Collection_Ship $ship)
 	{
 		return $ship->getName();
@@ -172,12 +191,12 @@ class EVEShipInfo_Collection_List
 	
 	protected function renderColumn_agility(EVEShipInfo_Collection_Ship $ship)
 	{
-		return $ship->getAgility(true);
+		return $ship->getAgility($this->showUnits);
 	}
 	
 	protected function renderColumn_warpspeed(EVEShipInfo_Collection_Ship $ship)
 	{
-		return $ship->getWarpSpeed(true);
+		return $ship->getWarpSpeed($this->showUnits);
 	}
 	
 	protected function renderColumn_race(EVEShipInfo_Collection_Ship $ship)
@@ -203,6 +222,41 @@ class EVEShipInfo_Collection_List
 	protected function renderColumn_group(EVEShipInfo_Collection_Ship $ship)
 	{
 		return $ship->getGroupName();
+	}
+	
+	protected function renderColumn_cargobay(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getCargobaySize($this->showUnits);
+	}
+	
+	protected function renderColumn_dronebandwidth(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getDroneBandwidth($this->showUnits);
+	}
+	
+	protected function renderColumn_dronebay(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getDronebaySize($this->showUnits);
+	}
+	
+	protected function renderColumn_turrets(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getTurretHardpoints();
+	}
+	
+	protected function renderColumn_launchers(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getLauncherHardpoints();
+	}
+	
+	protected function renderColumn_velocity(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getVelocity($this->showUnits);
+	}
+
+	protected function renderColumn_techlevel(EVEShipInfo_Collection_Ship $ship)
+	{
+		return $ship->getTechLevel();
 	}
 	
 	protected $thumbnailClasses = array();

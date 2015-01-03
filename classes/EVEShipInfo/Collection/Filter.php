@@ -28,23 +28,18 @@ class EVEShipInfo_Collection_Filter
 		$this->initVirtualGroups();
 	}
 	
-	public function getOrderBy($secondary=false)
+	public function getOrderBy()
 	{
-		return $this->orderBy[$secondary];
+		return $this->orderBy;
 	}
 	
-	public function getOrderDir($secondary=false)
+	public function getOrderDir()
 	{
-		if($this->ascending[$secondary]) {
+		if($this->ascending) {
 			return 'ascending';
 		}
 		
 		return 'descending';
-	}
-	
-	public function orderByName($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('name', $ascending, $secondary);
 	}
 	
    /**
@@ -54,10 +49,7 @@ class EVEShipInfo_Collection_Filter
     * @return EVEShipInfo_Collection_Filter
     * @see orderByVirtualGroup()
     */
-	public function orderByGroup($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('group', $ascending, $secondary);
-	}
+	public function orderByGroup($ascending=true) {	return $this->setOrderBy('group', $ascending); }
 	
    /**
     * Orders the list by the filter-specific virtual groups:
@@ -70,55 +62,62 @@ class EVEShipInfo_Collection_Filter
     * @return EVEShipInfo_Collection_Filter
     * @see orderByGroup()
     */
-	public function orderByVirtualGroup($ascending=true, $secondary=false)
-	{
-	    return $this->setOrderBy('virtualgroup', $ascending, $secondary);
-	}
+	public function orderByVirtualGroup($ascending=true) { return $this->setOrderBy('virtualgroup', $ascending); }
+	public function orderByRace($ascending=true) { return $this->setOrderBy('race', $ascending); }
+	public function orderByAgility($ascending=true) { return $this->setOrderBy('agility', $ascending); }
+	public function orderByVelocity($ascending=true) { return $this->setOrderBy('velocity', $ascending); }
+	public function orderByWarpSpeed($ascending=true) { return $this->setOrderBy('warpspeed', $ascending); }
+	public function orderByHighSlots($ascending=true) { return $this->setOrderBy('highslots', $ascending); }
+	public function orderByMedSlots($ascending=true) { return $this->setOrderBy('medslots', $ascending); }
+	public function orderByLowSlots($ascending=true) { return $this->setOrderBy('lowslots', $ascending); }
+	public function orderByName($ascending=true) { return $this->setOrderBy('name', $ascending); }
+	public function orderByCargoBay($ascending=true) { return $this->setOrderBy('cargobay', $ascending); }
+	public function orderByDroneBandwidth($ascending=true) { return $this->setOrderBy('dronebandwidth', $ascending); }
+	public function orderByTurretSlots($ascending=true) { return $this->setOrderBy('turrets', $ascending); }
+	public function orderByLauncherSlots($ascending=true) { return $this->setOrderBy('launchers', $ascending); }
+	public function orderByTechLevel($ascending=true) { return $this->setOrderBy('techlevel', $ascending); }
 	
-	public function orderByRace($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('race', $ascending, $secondary);
-	}
+	public function secondOrderByGroup() { return $this->setSecondOrderBy('group'); }
+	public function secondOrderByVirtualGroup() { return $this->setSecondOrderBy('virtualgroup'); }
+	public function secondOrderByRace() { return $this->setSecondOrderBy('race'); }
+	public function secondOrderByAgility() { return $this->setSecondOrderBy('agility'); }
+	public function secondOrderByVelocity() { return $this->setSecondOrderBy('velocity'); }
+	public function secondOrderByWarpSpeed() { return $this->setSecondOrderBy('warpspeed'); }
+	public function secondOrderByHighSlots() { return $this->setSecondOrderBy('highslots'); }
+	public function secondOrderByMedSlots() { return $this->setSecondOrderBy('medslots'); }
+	public function secondOrderByLowSlots() { return $this->setSecondOrderBy('lowslots'); }
+	public function secondOrderByCargoBay() { return $this->setSecondOrderBy('cargobay'); }
+	public function secondOrderByDroneBandwidth() { return $this->setSecondOrderBy('dronebandwidth'); }
+	public function secondOrderByTurretSlots() { return $this->setSecondOrderBy('turrets'); }
+	public function secondOrderByLauncherSlots() { return $this->setSecondOrderBy('launchers'); }
+	public function secondOrderByTechLevel() { return $this->setSecondOrderBy('techlevel'); }
 	
-	public function orderByAgility($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('agility', $ascending, $secondary);
-	}
-	
-	public function orderByVelocity($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('velocity', $ascending, $secondary);
-	}
-	
-	public function orderByWarpSpeed($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('warpspeed', $ascending, $secondary);
-	}
-	
-	public function orderByHighSlots($ascending=true, $secondary=false)
-	{
-		return $this->setOrderBy('highslots', $ascending, $secondary);
-	}
-	
-	public function orderByMedSlots($ascending=true, $secondary=false)
-	{
-	    return $this->setOrderBy('medslots', $ascending, $secondary);
-	}
-	
-	public function orderByLowSlots($ascending=true, $secondary=false)
-	{
-	    return $this->setOrderBy('lowslots', $ascending, $secondary);
-	}
-	
-	public function setOrderBy($field, $ascending=true, $secondary=false)
+	public function setOrderBy($field, $ascending=true)
 	{
 		if(!isset($this->orderFields)) {
 			$this->getOrderFields();
 		}
 		
 		if(isset($this->orderFields[$field])) {
-			$this->orderBy[$secondary] = $field;
-			$this->ascending[$secondary] = $ascending;
+			$this->orderBy = $field;
+			$this->ascending = $ascending;
+		} else {
+			$this->addWarning(sprintf(__('Unknown order field %1$s.', 'EVEShipInfo'), '['.$field.']'));
+		}
+		
+		return $this;
+	}
+	
+	protected $secondaryOrderBy;
+	
+	public function setSecondOrderBy($field)
+	{
+		if(!isset($this->orderFields)) {
+			$this->getOrderFields();
+		}
+		
+		if(isset($this->orderFields[$field])) {
+			$this->secondaryOrderBy = $field;
 		} else {
 			$this->addWarning(sprintf(__('Unknown order field %1$s.', 'EVEShipInfo'), '['.$field.']'));
 		}
@@ -402,8 +401,6 @@ class EVEShipInfo_Collection_Filter
 		return isset($this->groups[$groupID]);
 	}
 	
-	protected $sortMode;
-	
    /**
     * Retrieves an indexed array with all ship object instances
     * matching the current criteria.
@@ -422,12 +419,6 @@ class EVEShipInfo_Collection_Filter
 			}
 		}	
 		
-		if(isset($this->orderBy[true])) {
-		    $this->sortMode = true;
-		    usort($result, array($this, 'sortResults'));
-		}
-
-		$this->sortMode = false;
 		usort($result, array($this, 'sortResults'));
 		
 		if($this->limit > 0 && $this->limit <= $total) {
@@ -461,31 +452,7 @@ class EVEShipInfo_Collection_Filter
 			return false;
 		}
 		
-		if(isset($this->highslots) && !$this->matchNumber($ship->getHighSlots(), $this->highslots)) {
-			return false;
-		}
-		
-		if(isset($this->medslots) && !$this->matchNumber($ship->getMedSlots(), $this->medslots)) {
-	        return false;
-		}
-		
-		if(isset($this->lowslots) && !$this->matchNumber($ship->getLowSlots(), $this->lowslots)) {
-	        return false;
-		}
-		
 		if(isset($this->selectedGroups) && !isset($this->selectedGroups[$ship->getGroupID()])) {
-			return false;
-		}
-		
-		if(isset($this->agility) && !$this->matchNumber($ship->getAgility(), $this->agility)) {
-			return false;
-		}
-		
-		if(isset($this->warpSpeed) && !$this->matchNumber($ship->getWarpSpeed(), $this->warpSpeed)) {
-		    return false;
-		}
-		
-		if(isset($this->velocity) && !$this->matchNumber($ship->getVelocity(), $this->velocity)) {
 			return false;
 		}
 		
@@ -497,6 +464,20 @@ class EVEShipInfo_Collection_Filter
 			switch($attrib['type']) {
 				case 'numeric':
 					if(!$this->matchNumber($value, $attrib['expression'])) {
+						return false;
+					}
+					break;
+			}
+		}
+		
+		$props = array_values($this->properties);
+		$total = count($props);
+		for($i=0; $i<$total; $i++) {
+			$prop = $props[$i];
+			$value = $ship->getPropertyValue($prop['name']);
+			switch($prop['type']) {
+				case 'numeric':
+					if(!$this->matchNumber($value, $prop['expression'])) {
 						return false;
 					}
 					break;
@@ -621,7 +602,12 @@ class EVEShipInfo_Collection_Filter
 				'medslots' => __('Med slots', 'EVEShipInfo'),
 				'lowslots' => __('Low slots', 'EVEShipInfo'),
 			    'race' => __('Race', 'EVEShipInfo'),
-			    'virtualgroup' => __('Virtual group', 'EVEShipInfo')
+			    'virtualgroup' => __('Virtual group', 'EVEShipInfo'),
+			    'cargobay' => __('Cargo bay', 'EVEShipInfo'),
+			    'dronebandwidth' => __('Drone bandwidth', 'EVEShipInfo'),
+			    'turrets' => __('Turret slots', 'EVEShipInfo'),
+			    'launchers' => __('Launcher slots', 'EVEShipInfo'),
+			    'techlevel' => __('Tech level', 'EVEShipInfo')
 			); 
 		}
 		
@@ -660,11 +646,36 @@ class EVEShipInfo_Collection_Filter
 	protected function sortResults(EVEShipInfo_Collection_Ship $a, EVEShipInfo_Collection_Ship $b)
 	{
 		$dir = 1;
-		if(!$this->ascending[$this->sortMode]) {
+		if(!$this->ascending) {
 			$dir = -1;
 		}
 		
-		switch($this->orderBy[$this->sortMode]) {
+		$values = $this->getOrderValues($a, $b, $this->orderBy);
+		
+		// for the secondary order field, we simply append
+		// the string to the existing value to be compared,
+		// this way the comparison will work naturally.
+		if(isset($this->secondaryOrderBy) && $this->secondaryOrderBy != $this->orderBy) {
+			$secondary = $this->getOrderValues($a, $b, $this->secondaryOrderBy);
+			$values[0] .= $secondary[0];
+			$values[1] .= $secondary[1];
+		}
+		
+		return strnatcasecmp($values[0], $values[1])*$dir;
+	}
+	
+   /**
+    * Retrieves the comparison strings for the specified order field for
+    * the specified ships. Returns an indexed array with string A, string B.
+    * 
+    * @param EVEShipInfo_Collection_Ship $a
+    * @param EVEShipInfo_Collection_Ship $b
+    * @param string $orderBy
+    * @return multitype:string
+    */
+	protected function getOrderValues(EVEShipInfo_Collection_Ship $a, EVEShipInfo_Collection_Ship $b, $orderBy)
+	{
+		switch($orderBy) {
 			case 'agility':
 				$aVal = $a->getAgility();
 				$bVal = $b->getAgility();
@@ -700,24 +711,34 @@ class EVEShipInfo_Collection_Filter
 		        $bVal = $b->getRaceName();
 		        break;
 		        
-		    case 'class':
-		        $aVal = $a->getGroupName();
-		        $bVal = $b->getGroupName();
-		        break;
-		        
 		    case 'virtualgroup':
 		        $aVal = $this->getVirtualGroupName($a);
 		        $bVal = $this->getVirtualGroupName($b);
 		        break;
 			         
-			case 'name':
+			case 'cargobay':
+			    $aVal = $a->getCargobaySize();
+			    $bVal = $b->getCargobaySize();
+			    break;
+			    
+			case 'dronebandwidth':
+			    $aVal = $a->getDroneBandwidth();
+			    $bVal = $b->getDroneBandwidth();
+			    break;
+			    
+			case 'techlevel':
+			    $aVal = $a->getTechLevel();
+			    $bVal = $b->getTechLevel();
+		        break;
+		        
+	        case 'name':
 			default:
 				$aVal = $a->getName();
 				$bVal = $b->getName();
 				break;
 		}
 		
-		return strnatcasecmp($aVal, $bVal);
+		return array($aVal, $bVal);
 	}
 
 	protected $races;
@@ -763,54 +784,50 @@ class EVEShipInfo_Collection_Filter
 	
 	protected $attributes = array();
 
-	public function selectAgility($expression)
-	{
-		$this->selectAttribute('agility', 'numeric', $expression);
-	}
-	
+   /**
+    * Selects an attribute to limit the list to. 
+    * 
+    * @param string $name The attribute name
+    * @param string $type The type of comparison to apply to the attribute, i.e. 'numeric'
+    * @param string $expression The value to compare, or an expression if the comparison type supports it
+    * @return EVEShipInfo_Collection_Filter
+    */
 	protected function selectAttribute($name, $type, $expression)
 	{
-		$this->attributes[] = array(
+		$this->attributes[$name] = array(
 			'name' => $name,
 			'type' => $type,
 			'expression' => $expression
 		);
+		
+		return $this;
 	}
 	
-	protected $warpSpeed;
+	protected $properties = array();
 	
-	public function selectWarpSpeed($expression)
+	protected function selectProperty($name, $type, $expression)
 	{
-		$this->warpSpeed = $expression;
+	    $this->properties[$name] = array(
+	    	'name' => $name,
+	    	'type' => $type,
+	    	'expression' => $expression
+	    );
+	    
+	    return $this;
 	}
 	
-	protected $velocity;
-	
-	public function selectVelocity($expression)
-	{
-		$this->velocity = $expression;
-	}
-	
-	protected $highslots;
-	
-	public function selectHighSlots($expression)
-	{
-		$this->highslots = $expression;
-	}
-
-	protected $medslots;
-	
-	public function selectMedSlots($expression)
-	{
-		$this->medslots = $expression;
-	}
-
-	protected $lowslots;
-	
-	public function selectLowSlots($expression)
-	{
-		$this->lowslots = $expression;
-	}
+	public function selectAgility($expression) { return $this->selectAttribute('agility', 'numeric', $expression); }
+	public function selectWarpSpeed($expression) { return $this->selectAttribute('baseWarpSpeed', 'numeric', $expression); }
+	public function selectVelocity($expression)	{ return $this->selectAttribute('velocity', 'numeric', $expression); }
+	public function selectHighSlots($expression) { return $this->selectAttribute('hiSlots', 'numeric', $expression); }
+	public function selectMedSlots($expression) { return $this->selectAttribute('medSlots', 'numeric', $expression); }
+	public function selectLowSlots($expression) { return $this->selectAttribute('lowSlots', 'numeric', $expression); }
+	public function selectCargoBaySize($expression) { return $this->selectProperty('capacity', 'numeric', $expression); }
+	public function selectDroneBandwidth($expression) { return $this->selectAttribute('droneBandwidth', 'numeric', $expression); }
+	public function selectDroneBaySize($expression) { return $this->selectAttribute('droneCapacity', 'numeric', $expression); }
+	public function selectTurretSlots($expression) { return $this->selectAttribute('turretSlotsLeft', 'numeric', $expression); }
+	public function selectLauncherSlots($expression) { return $this->selectAttribute('launcherSlotsLeft', 'numeric', $expression); }
+	public function selectTechLevel($expression) { return $this->selectAttribute('techLevel', 'numeric', $expression); }
 	
 	protected $search;
 	

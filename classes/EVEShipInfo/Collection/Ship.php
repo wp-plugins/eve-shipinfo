@@ -92,12 +92,12 @@ class EVEShipInfo_Collection_Ship
     
     public function getDescription()
     {
-        return $this->getProperty('description');
+        return $this->getPropertyValue('description');
     }
     
     public function getMass($units=false)
     {
-        $value = $this->getProperty('mass');
+        $value = $this->getPropertyValue('mass');
         if(!$units) {
         	return $value;
         }
@@ -107,7 +107,7 @@ class EVEShipInfo_Collection_Ship
     
     public function getVolume($units=false)
     {
-        $value = $this->getProperty('volume');
+        $value = $this->getPropertyValue('volume');
         if(!$units) {
         	return $value;
         }
@@ -117,7 +117,7 @@ class EVEShipInfo_Collection_Ship
     
     public function getCargobaySize($units=false)
     {
-    	$value = $this->getProperty('capacity');
+    	$value = $this->getPropertyValue('capacity');
     	if(!$units) {
     		return $value;
     	}
@@ -127,7 +127,7 @@ class EVEShipInfo_Collection_Ship
     
     public function getRaceID()
     {
-        return $this->getProperty('raceID');
+        return $this->getPropertyValue('raceID');
     }
     
     public function getRaceName()
@@ -142,12 +142,12 @@ class EVEShipInfo_Collection_Ship
     
     public function getGroupName()
     {
-        return $this->getProperty('group_groupName');
+        return $this->getPropertyValue('group_groupName');
     }
     
     public function getGroupID()
     {
-        return $this->getProperty('groupID');
+        return $this->getPropertyValue('groupID');
     }
     
     public function getLowSlots()
@@ -313,6 +313,15 @@ class EVEShipInfo_Collection_Ship
     	return $average;
     }
     
+   /**
+    * The amount of launcher slots on the ship.
+    * @return EVEShipInfo_Collection_Ship_Attribute
+    */
+    public function getLauncherSlots()
+    {
+    	return $this->getAttribute('launcherSlotsLeft');
+    }
+    
     protected $attributes = array();
     
     protected $attributesInitialized = false;
@@ -441,7 +450,7 @@ class EVEShipInfo_Collection_Ship
    	    if(!isset($this->data['_'][$decyphered])) {
    	        return null;
    	    }
-    	     
+   	    
    	    $attr = $this->createAttribute($decyphered, $this->data['_'][$decyphered]);
    	    $this->attributes[$name] = $attr;
     	
@@ -456,7 +465,7 @@ class EVEShipInfo_Collection_Ship
     
     protected $propertiesInitialized = false;
     
-    protected function getProperty($name)
+    public function getPropertyValue($name)
     {
         if(!$this->propertiesInitialized) {
             $this->loadData();
@@ -856,7 +865,7 @@ class EVEShipInfo_Collection_Ship
     */
     public function isPilotable()
     {
-    	if($this->getProperty('published') != 1) {
+    	if($this->getPropertyValue('published') != 1) {
     		return false;
     	}
     	

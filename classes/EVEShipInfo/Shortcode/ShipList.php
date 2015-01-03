@@ -62,7 +62,15 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 			'column_headers' => 'yes',
 			'agility' => '',
 			'warpspeed' => '',
-			'velocity' => ''
+			'velocity' => '',
+		    'pilotable' => 'all',
+		    'cargobay' => '',
+		    'dronebandwidth' => '',
+		    'dronebay' => '',
+		    'show_units' => 'yes',
+		    'launchers' => '',
+		    'turrets' => '',
+		    'techlevel' => ''
 		);
 	}
 	
@@ -72,153 +80,228 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 		$list = $this->collection->createList($filter);
 		 
 	    $attribs = array(
-	    	'enabled' => array(
-	    	    'descr' => __('Whether the list is enabled:', 'EVEShipInfo').' '.
-	    	    		   __('Disabling a list allows you to keep its shortcode intact in your post without showing it.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'enum',
-	    		'values' => array(
-	    			'no' => __('List is enabled', 'EVEShipInfo'),
-	    			'yes' => __('List is disabled', 'EVEShipInfo')
-	    		)
-	    	),
-	        'template' => array(
-	            'descr' => __('The theme template file to use to render the list.', 'EVEShipInfo').' '.
-	        			   sprintf(__('Set to %1$s to disable.', 'EVEShipInfo'), '<code>no</code>').' '.
-	        			   sprintf(__('The template gets the filtered ships list in the %1$s variable.', 'EVEShipInfo'), '<code>$ships</code>'),
-	            'optional' => true,
-	            'type' => 'text'
-	        ),
-	        'linked' => array(
-	            'descr' => __('Whether to link the ship names.', 'EVEShipInfo'),
-	            'optional' => true,
-	            'type' => 'enum',
-	        	'values' => array(
-	        		'yes' => __('Yes, link the names.', 'EVEShipInfo'),
-	        		'no' => __('No, don\'t link any names.', 'EVEShipInfo')
-	        	)
-	        ),
-	        'popup' => array(
-	            'descr' => __('Whether to show the ship popup when clicked.', 'EVEShipInfo'),
-	            'optional' => true,
-	            'type' => 'enum',
-	            'values' => array(
-	                'yes' => __('Yes, show a popup', 'EVEShipInfo'),
-	                'no' => __('No, link to the virtual page', 'EVEShipInfo')
+	        'settings' => array(
+	            'group' => __('Settings'),
+	            'abstract' => __('Configuration settings for the list.'),
+		        'attribs' => array(
+		            'show_units' => array(
+		            	'descr' => sprintf(__('Whether to display unit labels for ships attributes that have specific units, like %s or %s.', 'EVEShipInfo'), '<code>M3</code>', '<code>AU</code>'),
+		            	'optional' => true,
+		            	'type' => 'enum',
+		            	'values' => array(
+		            		'no' => __('No, don\'t show any', 'EVEShipInfo'),
+		            		'yes' => __('Yes, show when applicable', 'EVEShipInfo')
+		            	)
+		            ),
+			    	'enabled' => array(
+			    	    'descr' => __('Whether the list is enabled:', 'EVEShipInfo').' '.
+			    	    		   __('Disabling a list allows you to keep its shortcode intact in your post without showing it.', 'EVEShipInfo'),
+			    	    'optional' => true,
+			    	    'type' => 'enum',
+			    		'values' => array(
+			    			'no' => __('List is enabled', 'EVEShipInfo'),
+			    			'yes' => __('List is disabled', 'EVEShipInfo')
+			    		)
+			    	),
+			        'template' => array(
+			            'descr' => __('The theme template file to use to render the list.', 'EVEShipInfo').' '.
+			        			   sprintf(__('Set to %1$s to disable.', 'EVEShipInfo'), '<code>no</code>').' '.
+			        			   sprintf(__('The template gets the filtered ships list in the %1$s variable.', 'EVEShipInfo'), '<code>$ships</code>'),
+			            'optional' => true,
+			            'type' => 'text'
+			        ),
+			        'linked' => array(
+			            'descr' => __('Whether to link the ship names.', 'EVEShipInfo'),
+			            'optional' => true,
+			            'type' => 'enum',
+			        	'values' => array(
+			        		'yes' => __('Yes, link the names.', 'EVEShipInfo'),
+			        		'no' => __('No, don\'t link any names.', 'EVEShipInfo')
+			        	)
+			        ),
+			        'popup' => array(
+			            'descr' => __('Whether to show the ship popup when clicked.', 'EVEShipInfo'),
+			            'optional' => true,
+			            'type' => 'enum',
+			            'values' => array(
+			                'yes' => __('Yes, show a popup', 'EVEShipInfo'),
+			                'no' => __('No, link to the virtual page', 'EVEShipInfo')
+			            )
+			        ),
+			    	'order_by' => array(
+			    	    'descr' => __('The ship attribute to sort the list by.', 'EVEShipInfo'),
+			    	    'optional' => true,
+			    	    'type' => 'enum',
+			    	    'values' => $filter->getOrderFields()
+			    	),
+			    	'order_dir' => array(
+			    	    'descr' => __('The direction in which to sort the list.', 'EVEShipInfo'),
+			    	    'optional' => true,
+			    	    'type' => 'enum',
+			    	    'values' => array(
+			    	    	'desc' => __('In descending order', 'EVEShipInfo'),
+			    	    	'descending' => __('In descending order', 'EVEShipInfo'),
+			    	    	'asc' => __('In ascending order', 'EVEShipInfo'),
+			    	    	'ascending' => __('In ascending order', 'EVEShipInfo')
+			    	    )
+			    	),
+			    	'show' => array(
+			    	    'descr' => __('The amount of ships to limit the list to.', 'EVEShipInfo').' '.
+			    				   sprintf(__('Set to %1$s to show all available ships.', 'EVEShipInfo'), '<code>all</code>'),
+			    	    'optional' => true,
+			    	    'type' => 'number'
+			    	),
+			    	'columns' => array(
+			    	    'descr' => __('The column(s) to show in the list.', 'EVEShipInfo').' '.
+			    				   __('They are shown in the exact order that you specify them.', 'EVEShipInfo').' '.
+			    				   __('Example:', 'EVEShipInfo').' <code>name, race, group</code>',
+			    	    'optional' => true,
+			    	    'type' => 'commalist',
+			    		'values' => $list->getColumns()
+			    	),
+		            'debug' => array(
+		            	'descr' => __('Whether to display debugging information above the list.', 'EVEShipInfo').' '.
+		            	__('Useful when something does not work as expected, since this will also show any list validation messages.', 'EVEShipInfo'),
+		            	'optional' => true,
+		            	'group' => __('Settings'),
+		            	'type' => 'enum',
+		            	'values' => array(
+		            		'yes' => __('Yes, show', 'EVEShipInfo'),
+		            		'no' => __('No, don\'t show', 'EVEShipInfo')
+		            	)
+		            ),
+		            'column_headers' => array(
+		            	'descr' => __('Whether to display the column headers.', 'EVEShipInfo'),
+		            	'optional' => true,
+		            	'group' => __('Settings'),
+		            	'type' => 'enum',
+		            	'values' => array(
+		            		'yes' => __('Yes, show', 'EVEShipInfo'),
+		            		'no' => __('No, don\'t show', 'EVEShipInfo')
+		            	)
+		            ),
+	            ),
+            ),
+            'filters' => array(
+            	'group' => __('Filters'),
+                'abstract' => __('These are all available filtering options to limit the list to ships matching the criteria you specify.'),
+                'attribs' => array(
+                    'turrets' => array(
+                    	'descr' => __('The amount of turret slots to limit the list to.', 'EVEShipInfo').' '.
+                    			   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'text',
+                    	'values' => $this->describeNumericExpressions()
+                    ),
+                    'launchers' => array(
+                    	'descr' => __('The amount of launcher slots to limit the list to.', 'EVEShipInfo').' '.
+                    			   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'text',
+                    	'values' => $this->describeNumericExpressions()
+                    ),
+                    'dronebay' => array(
+                    	'descr' => __('The size of the dronebay to limit the list to.', 'EVEShipInfo').' '.
+                        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'text',
+                    	'values' => $this->describeNumericExpressions()
+                    ),
+                    'dronebandwidth' => array(
+                    	'descr' => __('The drone bandwidth to limit the list to.', 'EVEShipInfo').' '.
+                        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'text',
+                    	'values' => $this->describeNumericExpressions()
+                    ),
+                    'cargobay' => array(
+                    	'descr' => __('The size of the cargobay to limit the list to.', 'EVEShipInfo').' '.
+                        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'text',
+                    	'values' => $this->describeNumericExpressions()
+                    ),
+                    'pilotable' => array(
+                    	'descr' => __('Whether to include or exclude private ships that cannot be flown by players, like the game developer test ships.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'enum',
+                    	'values' => array(
+                    		'all' => __('Selects both private and public ships', 'EVEShipInfo'),
+                    	    'private' => __('Only select private ships', 'EVEShipInfo'),
+                    	    'public' => __('Only select public ships', 'EVEShipInfo')
+                    	)
+                    ),
+			    	'races' => array(
+			    	    'descr' => __('The race(s) to limit the list to.', 'EVEShipInfo').' '.
+			    				   __('Example:', 'EVEShipInfo').' <code>minmatar, caldari</code>',
+			    	    'optional' => true,
+			    	    'type' => 'commalist',
+			    		'values' => $filter->describeRaces()
+			    	),
+			    	'highslots' => array(
+			    		'descr' => sprintf(__('The amount of %1$s slots to limit the list to.', 'EVEShipInfo'), __('high', 'EVEShipInfo')).' '.
+			    				   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+			    		'optional' => true,
+			    		'type' => 'text',
+			    		'values' => $this->describeNumericExpressions()
+			    	),
+			    	'lowslots' => array(
+			    	    'descr' => sprintf(__('The amount of %1$s slots to limit the list to.', 'EVEShipInfo'), __('low', 'EVEShipInfo')).' '.
+			    	    		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+			    	    'optional' => true,
+			    	    'type' => 'text',
+			    	    'values' => $this->describeNumericExpressions()
+			    	),
+			    	'medslots' => array(
+			    	    'descr' => sprintf(__('The amount of %1$s slots to limit the list to.', 'EVEShipInfo'), __('med', 'EVEShipInfo')).' '.
+			    	    __('This allows complex selections using expressions.', 'EVEShipInfo'),
+			    	    'optional' => true,
+			    	    'type' => 'text',
+			    	    'values' => $this->describeNumericExpressions()
+			    	),
+			    	'search' => array(
+			    	    'descr' => __('Limits the list to ships matching the search term either in their name or their description.', 'EVEShipInfo'),
+			    	    'optional' => true,
+			    	    'type' => 'text'
+			    	),
+			    	'groups' => array(
+			    		'descr' => __('The ship group(s) to limit the list to.', 'EVEShipInfo').' '.
+			    				   __('The first groups in the list are special convenience groups that automatically select all ship groups of the same hull size.', 'EVEShipInfo').' '.
+			    				   __('Example:', 'EVEShipInfo').' <code>cruiser, command ship</code>',
+			    		'optional' => true,
+			    		'type' => 'commalist',
+			    		'values' => $filter->describeGroups()
+			    	),
+			    	'agility' => array(
+		    	        'descr' => __('The ship agility values to limit the list to.', 'EVEShipInfo').' '.
+		    	        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+		    	        'optional' => true,
+		    	        'type' => 'text',
+		    	        'values' => $this->describeNumericExpressions()
+			    	),
+			    	'warpspeed' => array(
+		    	        'descr' => __('The ship warp speed values to limit the list to.', 'EVEShipInfo').' '.
+		    	        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+		    	        'optional' => true,
+		    	        'type' => 'text',
+		    	        'values' => $this->describeNumericExpressions()
+			    	),
+			    	'velocity' => array(
+			    		'descr' => __('The ship\'s maximum velocity to limit the list to.', 'EVEShipInfo').' '.
+			    				   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+			    		'optional' => true,
+			    		'type' => 'text',
+			    		'values' => $this->describeNumericExpressions()
+			    	),
+                    'techlevel' => array(
+                    	'descr' => __('The ship\'s tech level to limit the list to.', 'EVEShipInfo').' '.
+                    			   __('This allows complex selections using expressions.', 'EVEShipInfo'),
+                    	'optional' => true,
+                    	'type' => 'text',
+                    	'values' => $this->describeNumericExpressions()
+                    )
 	            )
-	        ),
-	    	'order_by' => array(
-	    	    'descr' => __('The ship attribute to sort the list by.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'enum',
-	    	    'values' => $filter->getOrderFields()
-	    	),
-	    	'order_dir' => array(
-	    	    'descr' => __('The direction in which to sort the list.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'enum',
-	    	    'values' => array(
-	    	    	'desc' => __('In descending order', 'EVEShipInfo'),
-	    	    	'descending' => __('In descending order', 'EVEShipInfo'),
-	    	    	'asc' => __('In ascending order', 'EVEShipInfo'),
-	    	    	'ascending' => __('In ascending order', 'EVEShipInfo')
-	    	    )
-	    	),
-	    	'show' => array(
-	    	    'descr' => __('The amount of ships to limit the list to.', 'EVEShipInfo').' '.
-	    				   sprintf(__('Set to %1$s to show all available ships.', 'EVEShipInfo'), '<code>all</code>'),
-	    	    'optional' => true,
-	    	    'type' => 'number'
-	    	),
-	    	'columns' => array(
-	    	    'descr' => __('The column(s) to show in the list.', 'EVEShipInfo').' '.
-	    				   __('They are shown in the exact order that you specify them.', 'EVEShipInfo').' '.
-	    				   __('Example:', 'EVEShipInfo').' <code>name, race, group</code>',
-	    	    'optional' => true,
-	    	    'type' => 'commalist',
-	    		'values' => $list->getColumns()
-	    	),
-	    	'races' => array(
-	    	    'descr' => __('The race(s) to limit the list to.', 'EVEShipInfo').' '.
-	    				   __('Example:', 'EVEShipInfo').' <code>minmatar, caldari</code>',
-	    	    'optional' => true,
-	    	    'type' => 'commalist',
-	    		'values' => $filter->describeRaces()
-	    	),
-	    	'highslots' => array(
-	    		'descr' => sprintf(__('The amount of %1$s slots to limit the list to.', 'EVEShipInfo'), __('high', 'EVEShipInfo')).' '.
-	    				   __('This allows complex selections using expressions.', 'EVEShipInfo'),
-	    		'optional' => true,
-	    		'type' => 'text',
-	    		'values' => $this->describeNumericExpressions()
-	    	),
-	    	'lowslots' => array(
-	    	    'descr' => sprintf(__('The amount of %1$s slots to limit the list to.', 'EVEShipInfo'), __('low', 'EVEShipInfo')).' '.
-	    	    		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'text',
-	    	    'values' => $this->describeNumericExpressions()
-	    	),
-	    	'medslots' => array(
-	    	    'descr' => sprintf(__('The amount of %1$s slots to limit the list to.', 'EVEShipInfo'), __('med', 'EVEShipInfo')).' '.
-	    	    __('This allows complex selections using expressions.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'text',
-	    	    'values' => $this->describeNumericExpressions()
-	    	),
-	    	'search' => array(
-	    	    'descr' => __('Limits the list to ships matching the search term either in their name or their description.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'text'
-	    	),
-	    	'column_headers' => array(
-	    	    'descr' => __('Whether to display the column headers.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'enum',
-	    		'values' => array(
-	    			'yes' => __('Yes, show', 'EVEShipInfo'),
-	    			'no' => __('No, don\'t show', 'EVEShipInfo')
-	    		)
-	    	),
-	    	'debug' => array(
-	    	    'descr' => __('Whether to display debugging information above the list.', 'EVEShipInfo').' '.
-	    				   __('Useful when something does not work as expected, since this will also show any list validation messages.', 'EVEShipInfo'),
-	    	    'optional' => true,
-	    	    'type' => 'enum',
-	    		'values' => array(
-	    			'yes' => __('Yes, show', 'EVEShipInfo'),
-	    			'no' => __('No, don\'t show', 'EVEShipInfo')
-	    		)
-	    	),
-	    	'groups' => array(
-	    		'descr' => __('The ship group(s) to limit the list to.', 'EVEShipInfo').' '.
-	    				   __('The first groups in the list are special convenience groups that automatically select all ship groups of the same hull size.', 'EVEShipInfo').' '.
-	    				   __('Example:', 'EVEShipInfo').' <code>cruiser, command ship</code>',
-	    		'optional' => true,
-	    		'type' => 'commalist',
-	    		'values' => $filter->describeGroups()
-	    	),
-	    	'agility' => array(
-    	        'descr' => __('The ship agility values to limit the list to.', 'EVEShipInfo').' '.
-    	        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
-    	        'optional' => true,
-    	        'type' => 'text',
-    	        'values' => $this->describeNumericExpressions()
-	    	),
-	    	'warpspeed' => array(
-    	        'descr' => __('The ship warp speed values to limit the list to.', 'EVEShipInfo').' '.
-    	        		   __('This allows complex selections using expressions.', 'EVEShipInfo'),
-    	        'optional' => true,
-    	        'type' => 'text',
-    	        'values' => $this->describeNumericExpressions()
-	    	),
-	    	'velocity' => array(
-	    		'descr' => __('The ship\'s maximum velocity to limit the list to.', 'EVEShipInfo').' '.
-	    				   __('This allows complex selections using expressions.', 'EVEShipInfo'),
-	    		'optional' => true,
-	    		'type' => 'text',
-	    		'values' => $this->describeNumericExpressions()
-	    	)
+            )
 	    );
 	    
 	    return $attribs;
@@ -230,12 +313,12 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 	{
 		if(!isset($this->numericExpressionsDescribed)) {
 			$this->numericExpressionsDescribed = array(
-			    '5' => sprintf(__('Exactly %1$s', 'EVEShipInfo'), 5),
-			    'bigger than 5' => sprintf(__('Any number above %1$s', 'EVEShipInfo'), 5),
-			    'smaller than 5' => sprintf(__('Any number below %1$s', 'EVEShipInfo'), 5),
-			    'bigger or equals 5' => sprintf(__('Any number above or exactly %1$s', 'EVEShipInfo'), 5),
-				'smaller or equals 5' => sprintf(__('Any number below or exactly %1$s', 'EVEShipInfo'), 5),
-				'between 3 and 5' => sprintf(__('Any number including and between %1$s and %2$s', 'EVEShipInfo'), 3, 5)
+			    'x' => sprintf(__('Exactly %1$s', 'EVEShipInfo'), '<span style="font-family:monospace;font-style:normal;">x</span>'),
+			    'bigger than x' => sprintf(__('Any number above %1$s', 'EVEShipInfo'), '<span style="font-family:monospace;font-style:normal;">x</span>'),
+			    'smaller than x' => sprintf(__('Any number below %1$s', 'EVEShipInfo'), '<span style="font-family:monospace;font-style:normal;">x</span>'),
+			    'bigger or equals x' => sprintf(__('Any number above or exactly %1$s', 'EVEShipInfo'), '<span style="font-family:monospace;font-style:normal;">x</span>'),
+				'smaller or equals x' => sprintf(__('Any number below or exactly %1$s', 'EVEShipInfo'), '<span style="font-family:monospace;font-style:normal;">x</span>'),
+				'between x and y' => sprintf(__('Any number including and between %1$s and %2$s', 'EVEShipInfo'), '<span style="font-family:monospace;font-style:normal;">x</span>', '<span style="font-family:monospace;font-style:normal;">y</span>')
 			);
 		}
 		
@@ -303,6 +386,10 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 			$this->list->disableColumnHeaders();
 		}
 		
+		if($this->getAttribute('show_units')=='no') {
+			$this->list->disableUnits();
+		}
+		
 		$thumbClasses = $this->getAttribute('thumbnail_classes');
 		if(!empty($thumbClasses)) {
 		    $classes = array_map('trim', explode(' ', $thumbClasses));
@@ -368,6 +455,43 @@ class EVEShipInfo_Shortcode_ShipList extends EVEShipInfo_Shortcode
 		$velocity = trim($this->getAttribute('velocity'));
 		if(!empty($velocity)) {
 			$this->filter->selectVelocity($velocity);
+		}
+		
+		$pilotable = $this->getAttribute('pilotable');
+		if($pilotable=='private') {
+			$this->filter->selectUnpilotable();
+		} else if($pilotable=='public') {
+			$this->filter->selectPilotable();
+		}
+		
+		$cargobay = trim($this->getAttribute('cargobay'));
+		if(!empty($cargobay)) {
+			$this->filter->selectCargoBaySize($cargobay);
+		}
+		
+		$droneBandwidth = trim($this->getAttribute('dronebandwidth'));
+		if(!empty($droneBandwidth)) {
+			$this->filter->selectDroneBandwidth($droneBandwidth);
+		}
+		
+		$dronebay = trim($this->getAttribute('dronebay'));
+		if(!empty($dronebay)) {
+			$this->filter->selectDroneBaySize($dronebay);
+		}
+		
+		$turrets = trim($this->getAttribute('turrets'));
+		if(!empty($turrets)) {
+			$this->filter->selectTurretSlots($turrets);
+		}
+		
+		$launchers = trim($this->getAttribute('launchers'));
+		if(!empty($launchers)) {
+			$this->filter->selectLauncherSlots($launchers);
+		}
+		
+		$techlevel = trim($this->getAttribute('techlevel'));
+		if(!empty($techlevel)) {
+			$this->filter->selectTechLevel($techlevel);
 		}
 	}
 	

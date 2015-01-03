@@ -17,11 +17,17 @@ abstract class EVEShipInfo_Admin_Page_Tab
     */
     protected $page;
     
+   /**
+    * @var EVEShipInfo_Admin_UI
+    */
+    protected $ui;
+    
 	abstract public function render();
 
 	public function __construct(EVEShipInfo_Admin_Page $page)
 	{
 		$this->page = $page;
+		$this->ui = $page->getUI();
 		$this->plugin = EVEShipInfo::getInstance();
 		$this->screen = get_current_screen();
 	}
@@ -67,11 +73,5 @@ abstract class EVEShipInfo_Admin_Page_Tab
 		'<div class="'.$type.'">'.
 			$message.
 		'</div>';
-	}
-	
-	protected function createStuffBox($title=null)
-	{
-		$this->plugin->loadClass('EVEShipInfo_Admin_Page_StuffBox');
-		return new EVEShipInfo_Admin_Page_StuffBox($this, $title);
 	}
 }

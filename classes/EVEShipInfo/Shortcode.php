@@ -25,7 +25,7 @@ abstract class EVEShipInfo_Shortcode
 		$this->id = $this->plugin->nextJSID();	
 	}
 	
-	protected function getDefaultAttributes()
+	public function getDefaultAttributes()
 	{
 		return array();
 	}

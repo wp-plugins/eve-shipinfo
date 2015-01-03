@@ -30,7 +30,7 @@ class EVEShipInfo_Admin_Page_Main_Dashboard extends EVEShipInfo_Admin_Page_Tab
 			$content .= __('Congratulations, everything seems to be in order.', 'EVEShipInfo');
 		}
 		
-		$html .= $this->createStuffBox(__('System health status:', 'EVEShipInfo').' '.$status)
+		$html .= $this->ui->createStuffBox(__('System health status:', 'EVEShipInfo').' '.$status)
 			->setContent($content)
 			->render();
 		

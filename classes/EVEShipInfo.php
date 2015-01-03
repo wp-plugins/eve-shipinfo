@@ -761,5 +761,20 @@ var EVEShipInfo_Translation = {".
 		
 		return false;
 	}
+	
+   /**
+    * @var EVEShipInfo_Admin_UI
+    */
+	protected $adminUI;
+	
+	public function getAdminUI()
+	{
+		if(!isset($this->adminUI)) {
+		    $this->loadClass('EVEShipInfo_Admin_UI');
+		    $this->adminUI = new EVEShipInfo_Admin_UI($this);
+		}
+		
+		return $this->adminUI;
+	}
 }
 	

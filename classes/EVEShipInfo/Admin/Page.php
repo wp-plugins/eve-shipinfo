@@ -25,6 +25,7 @@ abstract class EVEShipInfo_Admin_Page
         $this->plugin = $plugin;
         $this->tabs = $this->getTabs();
         $this->slug = $slug;
+        $this->ui = $plugin->getAdminUI();
     }
     
     public function getSlug()
@@ -160,5 +161,13 @@ abstract class EVEShipInfo_Admin_Page
     	}
     	
     	return false;
+    }
+    
+   /**
+    * @return EVEShipInfo_Admin_UI
+    */
+    public function getUI()
+    {
+    	return $this->ui;
     }
 }

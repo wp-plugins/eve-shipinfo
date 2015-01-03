@@ -111,25 +111,31 @@ class EVEShipInfo_Shortcode_ShipInfo extends EVEShipInfo_Shortcode
 	protected function _describeAttributes()
 	{
 		return array(
-			'name' => array(
-				'descr' => __('The name of the ship to link to.', 'EVEShipInfo'),
-				'optional' => true,
-				'type' => 'text'
-			),
-			'id' => array(
-				'descr' => __('The ID of the ship to link to (takes precedence over the name).', 'EVEShipInfo'),
-				'optional' => true,
-				'type' => 'text'
-			),
-			'popup' => array(
-				'descr' => __('Whether to show the ship popup when clicked.', 'EVEShipInfo'),
-				'optional' => true,
-				'type' => 'enum',
-				'values' => array(
-					'yes' => __('Yes, show a popup', 'EVEShipInfo'), 
-					'no' => __('No, link to the virtual page', 'EVEShipInfo')
-				)
-			)
+	        'settings' => array(
+	            'group' => __('Settings'),
+	            'abstract' => __('Configuration settings for the link.'),
+		        'attribs' => array(
+					'name' => array(
+						'descr' => __('The name of the ship to link to.', 'EVEShipInfo'),
+						'optional' => true,
+						'type' => 'text'
+					),
+					'id' => array(
+						'descr' => __('The ID of the ship to link to (takes precedence over the name).', 'EVEShipInfo'),
+						'optional' => true,
+						'type' => 'text'
+					),
+					'popup' => array(
+						'descr' => __('Whether to show the ship popup or its virtual page when clicked.', 'EVEShipInfo'),
+						'optional' => true,
+						'type' => 'enum',
+						'values' => array(
+							'yes' => __('Yes, show a popup', 'EVEShipInfo'), 
+							'no' => __('No, link to the virtual page', 'EVEShipInfo')
+						)
+					)
+	            )
+            )
 		);
 	}
 	
