@@ -250,7 +250,10 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 	    // the ships overview list has been requested.
 	    else if(isset($wp_query->query_vars[self::REQUEST_VAR_SHIPSLIST])) 
 	    {
-	    	$this->virtualPageName = 'ShipsList';
+	    	$this->virtualPageName = 'ShipFinder';
+	    	wp_enqueue_script('jquery');
+	    	wp_enqueue_script('jquery-ui-dialog');
+	    	wp_enqueue_script('eveshipinfo_shipfinder');
 	    }
 	     
 	    // now that we know we want to display a virtual page, we 
@@ -419,6 +422,7 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 		
 		wp_register_script('eveshipinfo', $this->getScriptURL('EVEShipInfo.js'), array('jquery'));
 		wp_register_script('eveshipinfo_ship', $this->getScriptURL('EVEShipInfo/Ship.js'), array('eveshipinfo'));
+		wp_register_script('eveshipinfo_shipfinder', $this->getScriptURL('EVEShipInfo/ShipFinder.js'), array('eveshipinfo'));
 		
 		wp_enqueue_script('eveshipinfo');
 		wp_enqueue_script('eveshipinfo_ship');
