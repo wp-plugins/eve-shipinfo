@@ -411,6 +411,30 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 		return $instance;    
 	}
 	
+   /**
+    * @var EVEShipInfo_EFTManager
+    */
+	protected $eftManager;
+	
+   /**
+    * Creates/gets the helper class used to retrieve information
+    * about the EFT XML export, when available (when the user has
+    * uploaded one).
+    * 
+    * @return EVEShipInfo_EFTManager
+    */
+	public function createEFTManager()
+	{
+		if(isset($this->eftManager)) {
+			return $this->eftManager;
+		}
+		
+		$this->loadClass('EVEShipInfo_EFTManager');
+		
+		$this->eftManager = new EVEShipInfo_EFTManager($this);
+		return $this->eftManager;
+	}
+	
 	protected function handle_initScripts()
 	{
 		// don't enqueue the scripts in the admin area
@@ -607,7 +631,16 @@ var EVEShipInfo_Translation = {".
 	    	'eveshipinfo_shortcodes',
 	    	array($this, 'handle_displayShortcodesPage')
 	    );
-	    
+
+	    add_submenu_page(
+	    	'eveshipinfo',
+	    	__('EFT fittings', 'EVEShipInfo'),
+	    	__('EFT fittings', 'EVEShipInfo'),
+	    	'edit_posts',
+	    	'eveshipinfo_eftfittings',
+	    	array($this, 'handle_displayEFTFittingsPage')
+	    );
+	     
 	}
 	
 	public function handle_displayMainPage($tabID=null)
@@ -622,6 +655,11 @@ var EVEShipInfo_Translation = {".
 	    $this->handle_displayMainPage('Shortcodes');
 	}
 
+	public function handle_displayEFTFittingsPage()
+	{
+		$this->handle_displayMainPage('EFTFittings');
+	}
+	
 	public function handle_displayDatabasePage()
 	{
 		$this->handle_displayMainPage('Database');

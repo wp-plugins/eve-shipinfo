@@ -33,4 +33,28 @@ class EVEShipInfo_Admin_UI
     	return $box;
     }
     
+    public function renderAlertError($text)
+    {
+    	return $this->renderAlert('error', $text);
+    }
+
+    public function renderAlertUpdated($text)
+    {
+    	return $this->renderAlert('updated', $text);
+    }
+    
+    public function renderAlertWarning($text)
+    {
+    	return $this->renderAlert('update-nag', $text);
+    }
+    
+    protected function renderAlert($type, $text)
+    {
+    	$html =
+    	'<div class="'.$type.'">'.
+        	'<p>'.$text.'</p>'.
+    	'</div>';
+    	
+    	return $html;
+    }
 }

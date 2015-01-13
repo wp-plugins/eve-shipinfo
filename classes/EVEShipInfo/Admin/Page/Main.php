@@ -8,7 +8,8 @@ class EVEShipInfo_Admin_Page_Main extends EVEShipInfo_Admin_Page
 			'Dashboard' => __('Dashboard', 'EVEShipInfo'),
         	'Help' => __('Help', 'EVEShipInfo'),
         	'Database' => __('Database reference', 'EVEShipInfo'),
-        	'Shortcodes' => __('Shortcordes reference', 'EVEShipInfo')
+        	'Shortcodes' => __('Shortcordes reference', 'EVEShipInfo'),
+			'EFTFittings' => __('EFT fittings', 'EVEShipInfo')
         );
 	}
 	
