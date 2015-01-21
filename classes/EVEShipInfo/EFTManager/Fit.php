@@ -56,12 +56,20 @@ class EVEShipInfo_EFTManager_Fit
     */
 	protected $hardware;
 	
-	public function __construct(EVEShipInfo_EFTManager $manager, $name, $ship, $hardware)
+	protected $id;
+	
+	public function __construct(EVEShipInfo_EFTManager $manager, $id, $name, $ship, $hardware)
 	{
 		$this->manager = $manager;
+		$this->id = $id;
 		$this->name = $name;
 		$this->shipName = $ship;
 		$this->hardware = $hardware;
+	}
+	
+	public function getID()
+	{
+		return $this->id;
 	}
 	
 	public function getName()

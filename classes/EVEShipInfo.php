@@ -633,13 +633,27 @@ var EVEShipInfo_Translation = {".
 	    );
 
 	    add_submenu_page(
-	    	'eveshipinfo',
-	    	__('EFT fittings', 'EVEShipInfo'),
-	    	__('EFT fittings', 'EVEShipInfo'),
-	    	'edit_posts',
-	    	'eveshipinfo_eftfittings',
-	    	array($this, 'handle_displayEFTFittingsPage')
+	    'eveshipinfo',
+		    __('EFT import', 'EVEShipInfo'),
+		    __('EFT import', 'EVEShipInfo'),
+		    'edit_posts',
+		    'eveshipinfo_eftimport',
+		    array($this, 'handle_displayEFTImportPage')
 	    );
+	     
+	    $eft = $this->createEFTManager();
+	    if($eft->hasFittings()) {
+	    	add_submenu_page(
+		    	'eveshipinfo',
+		    	__('EFT fittings', 'EVEShipInfo'),
+		    	__('EFT fittings', 'EVEShipInfo'),
+		    	'edit_posts',
+		    	'eveshipinfo_eftfittings',
+		    	array($this, 'handle_displayEFTFittingsPage')
+	    	);
+	    }
+	    	
+	    
 	     
 	}
 	
@@ -655,6 +669,11 @@ var EVEShipInfo_Translation = {".
 	    $this->handle_displayMainPage('Shortcodes');
 	}
 
+	public function handle_displayEFTImportPage()
+	{
+		$this->handle_displayMainPage('EFTImport');
+	}
+	
 	public function handle_displayEFTFittingsPage()
 	{
 		$this->handle_displayMainPage('EFTFittings');

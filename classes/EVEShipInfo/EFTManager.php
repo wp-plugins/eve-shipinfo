@@ -23,7 +23,8 @@ class EVEShipInfo_EFTManager
     */
 	public function hasFittings()
 	{
-		return file_exists($this->getDataPath());
+		$this->load();
+		return !empty($this->fittings);
 	}
 	
    /**
@@ -33,7 +34,22 @@ class EVEShipInfo_EFTManager
 	public function getFittings()
 	{
 		$this->load();
-		return $this->fittings;
+		return array_values($this->fittings);
+	}
+	
+   /**
+    * Retrieves a ship fit by its ID.
+    * @param integer $id
+    * @return EVEShipInfo_EFTManager_Fit|NULL
+    */
+	public function getFittingByID($id)
+	{
+		$this->load();
+		if(isset($this->fittings[$id])) {
+			return $this->fittings[$id];
+		}
+		
+		return null;
 	}
 	
    /**
@@ -50,13 +66,15 @@ class EVEShipInfo_EFTManager
 		}
 		
 		$date = new DateTime();
-		$date->setTimestamp(filemtime($this->getDataPath()));
+		$date->setTimestamp($this->modtime);
 		return $date;
 	}
 	
 	protected $fittings = array();
 	
 	protected $loaded = false;
+	
+	protected $modtime;
 	
 	protected function load()
 	{
@@ -65,23 +83,24 @@ class EVEShipInfo_EFTManager
 		}
 		
 		$this->loaded = true;
-		
-		if(!$this->hasFittings()) {
-			return;
-		}
-		
 		$this->plugin->loadClass('EVEShipInfo_EFTManager_Fit');
 		
-		$root = simplexml_load_file($this->getDataPath());
-		$encoded = json_encode($root);
-		$data = json_decode($encoded, true);
-		
-		if(!isset($data['fitting'])) {
+		$data = get_option('eveshipinfo_fittings', null);
+		if(!$data) {
 			return;
 		}
 		
-		foreach($data['fitting'] as $fit) {
-			$this->loadFit($fit);
+		$data = unserialize($data);
+		
+		$this->modtime = $data['updated'];
+		foreach($data['fits'] as $item) {
+			$this->fittings[$item['id']] = new EVEShipInfo_EFTManager_Fit(
+				$this, 
+			    $item['id'],
+				$item['name'], 
+				$item['ship'], 
+				$item['hardware']
+			);
 		}
 	}
 	
@@ -95,48 +114,17 @@ class EVEShipInfo_EFTManager
 		return count($this->fittings);
 	}
 	
-	protected function loadFit($fit)
+   /**
+    * Tells the manager it should refresh its data collection next
+    * time information is accessed. This is used by the import function
+    * to clear the internal cache.
+    * 
+    * @return EVEShipInfo_EFTManager
+    */
+	public function reload()
 	{
-		$ship = $fit['shipType']['@attributes']['value'];
-		$name = str_replace($ship.' - ', '', $fit['@attributes']['name']);
-		
-		// fits without modules
-		if(!isset($fit['hardware'])) {
-			$fit['hardware'] = array();
-		}
-		
-		// fits with a single module
-		if(isset($fit['hardware']['@attributes'])) {
-			$new = array(array('@attributes' => $fit['hardware']['@attributes']));
-			$fit['hardware'] = $new;
-		}
-		
-		$hardware = array();
-		foreach($fit['hardware'] as $item) {
-			$slot = $item['@attributes']['slot'];
-			$type = $item['@attributes']['type'];
-			
-			$tokens = explode(' ', $slot);
-			$slotType = $tokens[0];
-			if(!isset($hardware[$slotType])) {
-				$hardware[$slotType] = array();
-			}
-
-			if(isset($item['@attributes']['qty'])) {
-				$type .= ' x '.$item['@attributes']['qty'];
-			}
-				
-			$hardware[$slotType][] = $type;
-		}
-		
-		// ensure all keys are present
-		$keys = array('low', 'med', 'hi', 'rig', 'drone');
-		foreach($keys as $key) {
-			if(!isset($hardware[$key])) {
-				$hardware[$key] = array();
-			}
-		}
-		
-		$this->fittings[] = new EVEShipInfo_EFTManager_Fit($this, $name, $ship, $hardware);
+		$this->loaded = false;
+		$this->fittings = array();
+		return $this;
 	}
 }

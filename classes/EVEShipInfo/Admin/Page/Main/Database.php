@@ -138,6 +138,7 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
 		return $this->ui->createStuffBox(__('Ships', 'EVEShipInfo'))
 			->setAbstract(__('These are all available ships in the database.', 'EVEShipInfo'))
 			->setCollapsed()
+			->setContent($html)
 			->render();
 	}
 }
