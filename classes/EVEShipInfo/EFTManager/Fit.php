@@ -130,4 +130,38 @@ class EVEShipInfo_EFTManager_Fit
 	{
 		return $this->hardware[$type];
 	}
+	
+	protected static $registeredFits = array();
+	
+	public function renderClientRegistration($linkID)
+	{
+		$fitID = $this->getID();
+		if(isset(self::$registeredFits[$fitID])) {
+			return '';
+		}
+	
+		self::$registeredFits[$fitID] = true;
+	
+		$ship = $this->getShip();
+	
+		return
+		$ship->renderClientRegistration().
+		'<script>'.
+		sprintf(
+			"var fobj%s = EVEShipInfo.AddFit(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+			$linkID,
+			json_encode($linkID),
+			json_encode($this->getID()),
+			json_encode($this->getName()),
+			json_encode($ship->getName()),
+			json_encode($ship->getID()),
+			json_encode($this->getHighSlots()),
+			json_encode($this->getMedSlots()),
+			json_encode($this->getLowSlots()),
+			json_encode($this->getRigs()),
+			json_encode($this->getDrones())
+		).
+		'</script>';
+	}
+	
 }

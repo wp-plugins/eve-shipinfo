@@ -73,29 +73,8 @@ class EVEShipInfo_Shortcode_ShipInfo extends EVEShipInfo_Shortcode
 		$this->content =
 		'<a'.$this->plugin->compileAttributes($attribs).'>'.
 			$this->content.
-		'</a>';
-		
-		$this->registerShip($ship);
-	}
-	
-	protected static $registeredShips = array();
-	
-	protected function registerShip(EVEShipInfo_Collection_Ship $ship)
-	{
-		$shipID = $ship->getID();
-		if(isset(self::$registeredShips[$shipID])) {
-			return;
-		}
-		
-		self::$registeredShips[$shipID] = true; 
-		
-		$this->content .= 
-		'<script>'.
-			sprintf(
-			    "EVEShipInfo.AddShip(%s);",
-			    json_encode($ship->exportData())
-			).
-		'</script>';
+		'</a>'.
+		$ship->renderClientRegistration();
 	}
 	
 	public function getDefaultAttributes()

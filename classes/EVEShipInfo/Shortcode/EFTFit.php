@@ -13,9 +13,9 @@ class EVEShipInfo_Shortcode_EFTFit extends EVEShipInfo_Shortcode
 		__('Links a text to show details of one of your EFT fits.', 'EVEShipInfo').' '.
 		'<b>'.__('Note:', 'EVEShipInfo').'</b> '.
 		sprintf(
-		    __('You have to %simport%s your EFT fits before you can use this.', 'EVEShipInfo'),
-		    '<a href="?page=eveshipinfo_eftimport">',
-		    '</a>'
+			__('You have to %simport%s your EFT fits before you can use this.', 'EVEShipInfo'),
+			'<a href="?page=eveshipinfo_eftimport">',
+			'</a>'
 		);
 	}
 	
@@ -26,15 +26,15 @@ class EVEShipInfo_Shortcode_EFTFit extends EVEShipInfo_Shortcode
 	
 	public function process()
 	{
-		$id = $this->getAttribute('id');
-		if(empty($id)) {
+		$fitID = $this->getAttribute('id');
+		if(empty($fitID)) {
 			return;
 		}
 		
 		/* @var $ship EVEShipInfo_Collection_Ship */
 		
 		$eft = $this->plugin->createEFTManager();
-		$fit = $eft->getFittingByID($id);
+		$fit = $eft->getFittingByID($fitID);
 		if(!$fit) {
 			return;
 		}
@@ -44,38 +44,22 @@ class EVEShipInfo_Shortcode_EFTFit extends EVEShipInfo_Shortcode
 		);
 		
 		$attribs = array(
-			'href' => 'javascript_void(0)',
-		    'onclick' => sprintf("EVEShipInfo.InfoPopup('%s')", $id)
+		    'id' => $this->id,
+			'href' => 'javascript:void(0)',
+			'onclick' => sprintf("EVEShipInfo.ShowFitting('%s')", $fitID)
 		);
 		
 		$attribs['class'] = implode(' ', $classes);
 		
+		if(empty($this->content)) {
+			$this->content = $fit->getName();
+		}
+		
 		$this->content =
 		'<a'.$this->plugin->compileAttributes($attribs).'>'.
 			$this->content.
-		'</a>';
-		
-		$this->registerFit($fit);
-	}
-	
-	protected static $registeredFits = array();
-	
-	protected function registerFit(EVEShipInfo_EFTManager_Fit $fit)
-	{
-		$fitID = $fit->getID();
-		if(isset(self::$registeredFits[$fitID])) {
-			return;
-		}
-		
-		self::$registeredFits[$fitID] = true; 
-		
-		$this->content .= 
-		'<script>'.
-			sprintf(
-			    "EVEShipInfo.AddFit(%s);",
-			    json_encode($fit->exportData())
-			).
-		'</script>';
+		'</a>'.
+		$fit->renderClientRegistration($this->id);
 	}
 	
 	public function getDefaultAttributes()
@@ -88,22 +72,23 @@ class EVEShipInfo_Shortcode_EFTFit extends EVEShipInfo_Shortcode
 	protected function _describeAttributes()
 	{
 		return array(
-	        'settings' => array(
-	            'group' => __('Settings'),
-	            'abstract' => __('Configuration settings for the link.'),
-		        'attribs' => array(
+			'settings' => array(
+				'group' => __('Settings'),
+				'abstract' => __('Configuration settings for the link.'),
+				'attribs' => array(
 					'id' => array(
-						'descr' => __('The ID of the fit to link to.', 'EVEShipInfo').' '.
-					    		   sprintf(
-					    		       __('Have a look at the %sfittings list%s to find out which IDs you can use.'),
-					    		       '<a href="?page=eveshipinfo_eftfittings">',
-					    		       '</a>'
-				    		       ),
+						'descr' => 
+					    	__('The ID of the fit to link to.', 'EVEShipInfo').' '.
+							sprintf(
+							   __('Have a look at the %sfittings list%s to find out which IDs you can use.'),
+							   '<a href="?page=eveshipinfo_eftfittings">',
+							   '</a>'
+							),
 						'optional' => true,
 						'type' => 'text'
 					),
-	            )
-            )
+				)
+			)
 		);
 	}
 	
@@ -113,7 +98,7 @@ class EVEShipInfo_Shortcode_EFTFit extends EVEShipInfo_Shortcode
 			array(
 				'shortcode' => '[TAGNAME id="2"]',
 				'descr' => __('Insert a link to the target fit.', 'EVEShipInfo').' '.
-					       __('Since the shortcode is empty, the name of the fit will be used for the link.', 'EVEShipInfo')
+						   __('Since the shortcode is empty, the name of the fit will be used for the link.', 'EVEShipInfo')
 			),
 			array(
 				'shortcode' => '[TAGNAME id="2"]'.__('Custom link text', 'EVEShipInfo').'[/TAGNAME]',

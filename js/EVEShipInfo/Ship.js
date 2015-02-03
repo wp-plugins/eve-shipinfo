@@ -20,7 +20,8 @@ var EVEShipInfo_Ship = function(collection, data)
 		'FrontView':'Front view',
 		'SideView':'Side view',
 		'Description':'Description',
-		'Attributes':'Attributes'
+		'Attributes':'Attributes',
+		'Fittings':'Fittings'
 	};
 	
    /**
@@ -83,8 +84,10 @@ var EVEShipInfo_Ship = function(collection, data)
 				jQuery.each(this.tabs, function(tabID, tabLabel) {
 					if(ship.IsTabEnabled(tabID)) {
 						html += ''+
-						'<div class="shipinfo-tab shipinfo-'+tabID.toLowerCase()+'" id="'+ship.ElementID('tabcontent_'+tabID)+'">'+
-							tabLabel+
+						'<div class="shipinfo-tab shipinfo-'+tabID.toLowerCase()+'">'+
+							'<div class="shipinfo-tab-wrap" id="'+ship.ElementID('tabcontent_'+tabID)+'">'+
+								tabLabel+
+							'</div>'+
 						'</div>';
 					}
 				});
@@ -141,6 +144,11 @@ var EVEShipInfo_Ship = function(collection, data)
 	this.IsTabEnabled_Description = function()
 	{
 		return true;
+	};
+	
+	this.IsTabEnabled_Fittings = function()
+	{
+		return this.HasFittings();
 	};
 	
 	this.ResolveDialogSize = function()
@@ -206,16 +214,18 @@ var EVEShipInfo_Ship = function(collection, data)
 		var wrapper = this.Element('content_wrapper');
 		
 		jQuery.each(this.tabs, function(id, label) {
-			contentEl = ship.Element('tabcontent_'+id);
 			linkEl = ship.Element('tablink_'+id);
+			tabEl = wrapper.find('.shipinfo-'+id.toLowerCase());
 			if(id != tabID) {
-				contentEl.hide();
+				tabEl.hide();
 				linkEl.removeClass('shipinfo-active');
 				wrapper.removeClass(id.toLowerCase());
 			} else {
-				contentEl.show();
+				tabEl.show();
 				linkEl.addClass('shipinfo-active');
 				wrapper.addClass(id.toLowerCase());
+				wrapper.find('.shipinfo-tab').css('height', wrapper.innerHeight()+'px');
+				//contentEl.css('height', wrapper.innerHeight());
 			}
 		});
 		
@@ -332,6 +342,21 @@ var EVEShipInfo_Ship = function(collection, data)
 		return html;
 	};
 	
+	this.RenderTab_Fittings = function()
+	{
+		var html = '';
+		var fittings = this.GetFittings();
+		
+		jQuery.each(fittings, function(idx, fit) {
+			html += fit.GetName()+'<br/>'+
+			'<pre>'+
+				fit.ExportHTML()+
+			'</pre>';
+		});
+		
+		return html;
+	};
+	
 	this.Handle_ClickTab = function(tabID)
 	{
 		this.ActivateTab(tabID);
@@ -340,5 +365,25 @@ var EVEShipInfo_Ship = function(collection, data)
 	this.TL = function(textID)
 	{
 		return EVEShipInfo_Translation.Translate(textID);
+	};
+	
+	this.GetFittings = function()
+	{
+		return EVEShipInfo.GetFittingsByShip(this);
+	};
+	
+	this.GetID = function()
+	{
+		this.data.id;
+	};
+	
+	this.HasFittings = function()
+	{
+		var fittings = this.GetFittings();
+		if(fittings.length > 0) {
+			return true;
+		}
+		
+		return false;
 	};
 };

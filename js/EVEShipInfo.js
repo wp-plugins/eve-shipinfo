@@ -11,10 +11,12 @@
 var EVEShipInfo =
 {
 	'ships':{},
+	'fittings':{},
 	
 	AddShip:function(shipData)
 	{
 		this.ships[shipData.id] = new EVEShipInfo_Ship(this, shipData);
+		return this.ships[shipData.id];
 	},
 	
 	InfoPopup:function(shipID)
@@ -24,5 +26,34 @@ var EVEShipInfo =
 		}
 		
 		this.ships[shipID].InfoPopup();
+	},
+	
+	AddFit:function(linkID, fittingID, name, shipName, shipID, highSlots, medSlots, lowSlots, rigs, drones)
+	{
+		this.fittings[fittingID] = new EVEShipInfo_Fitting(linkID, fittingID, name, shipName, shipID, highSlots, medSlots, lowSlots, rigs, drones);
+		return this.fittings[fittingID];
+	},
+	
+	ShowFitting:function(fittingID)
+	{
+		if(typeof(this.fittings[fittingID])=='undefined') {
+			return;
+		}
+		
+		this.fittings[fittingID].Show();
+	},
+	
+	GetFittingsByShip:function(ship)
+	{
+		var fittings = [];
+		jQuery.each(this.fittings, function(idx, fitting) {
+			if(fitting.GetShipID() == ship.GetID()) {
+				return;
+			}
+			
+			fittings.push(fitting);
+		});
+		
+		return fittings;
 	}
 };

@@ -446,10 +446,12 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 		
 		wp_register_script('eveshipinfo', $this->getScriptURL('EVEShipInfo.js'), array('jquery'));
 		wp_register_script('eveshipinfo_ship', $this->getScriptURL('EVEShipInfo/Ship.js'), array('eveshipinfo'));
+		wp_register_script('eveshipinfo_fitting', $this->getScriptURL('EVEShipInfo/Fitting.js'), array('eveshipinfo'));
 		wp_register_script('eveshipinfo_shipfinder', $this->getScriptURL('EVEShipInfo/ShipFinder.js'), array('eveshipinfo'));
 		
 		wp_enqueue_script('eveshipinfo');
 		wp_enqueue_script('eveshipinfo_ship');
+		wp_enqueue_script('eveshipinfo_fitting');
 		wp_enqueue_script('eveshipinfo_translation');
 		
 		wp_register_style('eveshipinfo', $this->getScriptURL('EVEShipInfo.css'));
