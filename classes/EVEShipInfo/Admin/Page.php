@@ -19,6 +19,11 @@ abstract class EVEShipInfo_Admin_Page
     */
     protected $screen;
     
+   /**
+    * @var EVEShipInfo_Admin_UI
+    */
+    protected $ui;
+    
     public function __construct(EVEShipInfo $plugin, $slug)
     {
     	$this->screen = get_current_screen();
@@ -82,11 +87,35 @@ abstract class EVEShipInfo_Admin_Page
     		$this->activeTab = $this->createTab(key($this->tabs));
     	}
     	
+    	$content = $this->activeTab->render();
+    	
         $html =
         '<div class="wrap">'.
             '<h2>'.$this->getTitle().'</h2>'.
             '<br/>'.
         	'<div id="poststuff">';
+        
+		        if(!empty($this->errorMessages)) {
+		        	foreach($this->errorMessages as $message) {
+		        		$html .=
+		        		$this->ui->renderAlertError(
+		        			'<span class="dashicons dashicons-info error-message"></span> '.
+		        			'<b>'.__('Error:', 'EVEShipInfo').'</b> '.
+		        			$message
+		        		);
+		        	}
+		        }
+		        
+		        if(!empty($this->successMessages)) {
+		        	foreach($this->successMessages as $message) {
+		        		$html .=
+		        		$this->ui->renderAlertUpdated(
+		        			'<span class="dashicons dashicons-yes"></span> '.
+		        			$message
+		        		);
+		        	}
+		        }
+		        
 	        	if(count($this->tabs) > 1) {
 		        	$html .=
 		            '<table class="wp-list-table widefat">'.
@@ -94,9 +123,10 @@ abstract class EVEShipInfo_Admin_Page
 		            		'<tr>'.
 		            			'<td>'.
 						            '<ul class="subsubsub" style="margin-top:0;">';
-						        		$total = count($this->tabs);
+		        						$tabs = $this->getEnabledTabs();
+						        		$total = count($tabs);
 						        		$count = 0;
-						        		foreach($this->tabs as $tabID => $tabLabel) {
+						        		foreach($tabs as $tabID => $tabLabel) {
 						        			$count++;
 						        			$active = '';
 						        			if($tabID==$this->activeTab->getID()) {
@@ -130,11 +160,32 @@ abstract class EVEShipInfo_Admin_Page
 	            	$html .= '<h3>'.$this->activeTab->getTitle().'</h3><br/>';
 				}
 				$html .=
-	            $this->activeTab->render().
+	            $content.
             '</div>'.
         '</div>';
         
         return $html;
+    }
+    
+    protected function getEnabledTabs()
+    {
+        $total = count($this->tabs);
+        $count = 0;
+        $enabled = array();
+        foreach($this->tabs as $tabID => $tabLabel) {
+        	if(!$this->isTabEnabled($tabID)) {
+        		continue;
+        	}
+        	
+        	$enabled[$tabID] = $tabLabel;
+        }
+        
+        return $enabled;
+    }
+    
+    protected function isTabEnabled($tabID)
+    {
+    	return true;
     }
     
     public function display()
@@ -170,4 +221,18 @@ abstract class EVEShipInfo_Admin_Page
     {
     	return $this->ui;
     }
+
+	protected $errorMessages = array();
+	
+	protected $successMessages = array();
+	
+	public function addErrorMessage($message)
+	{
+		$this->errorMessages[] = $message;
+	}
+	
+	public function addSuccessMessage($message)
+	{
+		$this->successMessages[] = $message;
+	}
 }

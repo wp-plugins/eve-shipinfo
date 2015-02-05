@@ -74,4 +74,15 @@ abstract class EVEShipInfo_Admin_Page_Tab
 			$message.
 		'</div>';
 	}
+
+	protected function addErrorMessage($message)
+	{
+		$this->page->addErrorMessage($message);
+	}
+	
+	protected function addSuccessMessage($message)
+	{
+		$this->page->addSuccessMessage($message);
+	}
+	
 }

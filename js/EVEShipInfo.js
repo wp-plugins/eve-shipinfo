@@ -48,10 +48,8 @@ var EVEShipInfo =
 		var fittings = [];
 		jQuery.each(this.fittings, function(idx, fitting) {
 			if(fitting.GetShipID() == ship.GetID()) {
-				return;
+				fittings.push(fitting);
 			}
-			
-			fittings.push(fitting);
 		});
 		
 		return fittings;

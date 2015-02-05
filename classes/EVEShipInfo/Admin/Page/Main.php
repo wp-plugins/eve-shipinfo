@@ -9,13 +9,9 @@ class EVEShipInfo_Admin_Page_Main extends EVEShipInfo_Admin_Page
         	'Help' => __('Help', 'EVEShipInfo'),
         	'Database' => __('Database reference', 'EVEShipInfo'),
         	'Shortcodes' => __('Shortcordes reference', 'EVEShipInfo'),
-			'EFTImport' => __('EFT import', 'EVEShipInfo')
+			'EFTImport' => __('EFT import', 'EVEShipInfo'),
+		    'EFTFittings' => __('EFT fittings', 'EVEShipInfo')
         );
-		
-		$eft = $this->plugin->createEFTManager();
-		if($eft->hasFittings()) {
-			$tabs['EFTFittings'] = __('EFT fittings', 'EVEShipInfo');
-		}
 		
 		return $tabs;
 	}
@@ -23,5 +19,15 @@ class EVEShipInfo_Admin_Page_Main extends EVEShipInfo_Admin_Page
 	public function getTitle()
 	{
 		return __('EVE ShipInfo', 'EVEShipInfo');
+	}
+	
+	protected function isTabEnabled($tabID)
+	{
+	    if($tabID == 'EFTFittings') {
+	        $eft = $this->plugin->createEFTManager();
+	        return $eft->hasFittings(); 
+	    }
+	    
+		return true;
 	}
 }

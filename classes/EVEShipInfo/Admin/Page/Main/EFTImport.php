@@ -12,42 +12,54 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
     */
 	protected $eft;
 	
-	protected $uploadSuccess = false;
-	
 	public function render()
 	{
 		/* @var $fit EVEShipInfo_EFTManager_Fit */
 		
 		$this->eft = $this->plugin->createEFTManager();
 		
-		if(isset($_POST['process_upload']) && $_POST['process_upload'] == 'yes') {
+	    if(isset($_POST['process_upload']) && $_POST['process_upload'] == 'yes') {
 			$this->processUpload();
 		}
 		
-		$html = '';
-		
-		if(isset($this->uploadError)) {
-			$html .= 
-			$this->ui->renderAlertError(
-				'<span class="dashicons dashicons-info error-message"></span> '.
-				'<b>'.__('Error:', 'EVEShipInfo').'</b> '.
-				$this->uploadError
-			);
-		} else if($this->uploadSuccess) {
-			$html .=
-			$this->ui->renderAlertUpdated(
-				'<span class="dashicons dashicons-yes"></span> '.
-				sprintf(
-					__('The file was imported successfully at %1$s, %2$s fits found.'),
-					date('H:i:s'), 
-					$this->eft->countFittings()
-				)
-			);
+		if(isset($_REQUEST['confirmDelete']) && $_REQUEST['confirmDelete']) {
+			$this->processDelete();
 		}
 		
-		$html .= $this->renderForm();
+		$html = 
+		$this->renderForm().
+		$this->renderMaintenance();
 		
 		return $html;
+	}
+	
+	protected function renderMaintenance()
+	{
+	    if(!$this->eft->hasFittings()) {
+	    	return '';
+	    }
+	    
+	    $confirmText =
+	    __('All existing fits will be deleted permanently.', 'EVEShipInfo').' '.
+	    __('This cannot be undone, are you sure?', 'EVEShipInfo');
+	    
+	    $box = $this->ui->createStuffBox(__('Fittings maintenance', 'EVEShipInfo'));
+	    $box->setCollapsed();
+	    $box->setContent(
+	    	'<script>'.
+	    		'function ConfirmDeleteFits()'.
+    			'{'.
+    				"if(confirm('".$confirmText."')) {".
+    					"document.location = '?page=eveshipinfo_eftimport&confirmDelete=yes'".
+    				'}'.
+    			'}'.
+    		'</script>'.
+	    	'<a href="javascript:void(0)" onclick="ConfirmDeleteFits()" class="button" title="'.__('Displays a confirmation dialog.', 'EVEShipInfo').'">'.
+	   		 	__('Delete all fits...', 'EVEShipInfo').
+	    	'</a>'
+	    );
+	    
+	    return $box->render();
 	}
 	
 	protected function renderForm()
@@ -111,7 +123,20 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 			->render();
 	}
 	
-	protected $uploadError;
+	protected function processDelete()
+	{
+		delete_option('eveshipinfo_name_hashes');
+		delete_option('eveshipinfo_fittings');
+		
+		$this->eft->reload();
+		
+		$this->addSuccessMessage(
+			sprintf(
+			    __('All fittings have been deleted successfully at %1$s','EVEShipInfo'), 
+			    date('H:i:s')
+		    )    
+	    );
+	}
 	
 	protected $nameHashes;
 	
@@ -123,29 +148,32 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		
 		$ext = strtolower(pathinfo($_FILES['eft_xml_file']['name'], PATHINFO_EXTENSION));
 		if($ext != 'xml') {
-			$this->uploadError = __('The uploaded file was not an XML file.', 'EVEShipFile');
+		    $this->addErrorMessage(__('The uploaded file was not an XML file.', 'EVEShipFile'));
 			return;
 		}
 		
 		$tmpFile = $_FILES['eft_xml_file']['tmp_name'];
 		$content = trim(file_get_contents($tmpFile));
 		if(empty($content)) {
-			$this->uploadError = __('The uploaded file was empty.', 'EVEShipInfo');
+			$this->addErrorMessage(__('The uploaded file was empty.', 'EVEShipInfo'));
 			return;
 		}
 
 		$root = @simplexml_load_file($tmpFile);
 		if(!$root) {
-			$this->uploadError = __('The uploaded XML file could not be read, it is possibly malformed or not an XML file.', 'EVEShipInfo');
+			$this->addErrorMessage(__('The uploaded XML file could not be read, it is possibly malformed or not an XML file.', 'EVEShipInfo'));
 			return;
 		}
 		
 		$encoded = json_encode($root);
 		$data = json_decode($encoded, true);
-		$mode = $_REQUEST['eft_import_mode'];
+		$mode = 'fresh';
+		if(isset($_REQUEST['eft_import_mode'])) {
+			$mode = $_REQUEST['eft_import_mode'];
+		}
 		
 		if(!isset($data['fitting'])) {
-			$this->uploadError = __('The fitting data could not be found in the XML file.', 'EVEShipInfo');
+			$this->addErrorMessage(__('The fitting data could not be found in the XML file.', 'EVEShipInfo'));
 			return;
 		}
 
@@ -166,11 +194,9 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		}
 		
 		if(empty($fits)) {
-			$this->uploadError = __('No fittings found in the XML file.', 'EVEShipInfo');
+			$this->addErrorMessage(__('No fittings found in the XML file.', 'EVEShipInfo'));
 			return;
 		}
-		
-		$this->uploadSuccess = true;
 		
 		$optionData = array(
 			'updated' => time(),
@@ -178,14 +204,13 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		);
 
 		$existing = get_option('eveshipinfo_fittings', null);
-		if(!$existing) {
-			add_option('eveshipinfo_fittings', serialize($optionData));
-			return;
+		if( !$existing) {
+			//add_option('eveshipinfo_fittings', serialize($optionData));
+			$existing = array();
+		} else {
+		    $existing = unserialize($existing);
 		}
 
-		$existing = unserialize($existing);
-		
-		$mode = $_REQUEST['eft_import_mode'];
 		switch($mode) {
 			case 'merge':
 			    foreach($existing['fits'] as $id => $fit) {
@@ -214,6 +239,12 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		update_option('eveshipinfo_name_hashes', serialize($this->nameHashes));
 		
 		$this->eft->reload();
+
+		$this->addSuccessMessage(sprintf(
+			__('The file was imported successfully at %1$s, %2$s fits found.', 'EVEShipInfo'),
+			date('H:i:s'), 
+			$this->eft->countFittings()
+		));
 	}
 	
 	protected function loadFit($fit)

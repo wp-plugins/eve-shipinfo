@@ -57,4 +57,9 @@ class EVEShipInfo_Admin_UI
     	
     	return $html;
     }
+    
+    public function addSuccessMessage($message)
+    {
+    	
+    }
 }
