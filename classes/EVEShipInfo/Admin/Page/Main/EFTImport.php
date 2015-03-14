@@ -140,43 +140,50 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 	
 	protected $nameHashes;
 	
-	protected function processUpload()
+   /**
+    * Reads the contents of the uploaded EFT fittings XML file, and
+    * tries to read it. Returns an array with all fits that were found,
+    * or false if an error occurred. In case of an error, an error message
+    * with details on what went wrong is automatically added and displayed.
+    * 
+    * @return boolean|array
+    */
+	protected function parseXML()
 	{
 		if(!isset($_FILES['eft_xml_file'])) {
-			return;
+			$this->addErrorMessage(__('No file has been uploaded.', 'EVEShipInfo'));
+			return false;
 		}
 		
 		$ext = strtolower(pathinfo($_FILES['eft_xml_file']['name'], PATHINFO_EXTENSION));
 		if($ext != 'xml') {
-		    $this->addErrorMessage(__('The uploaded file was not an XML file.', 'EVEShipFile'));
-			return;
+		    $this->addErrorMessage(__('The uploaded file was not an XML file.', 'EVEShipInfo'));
+			return false;
 		}
 		
 		$tmpFile = $_FILES['eft_xml_file']['tmp_name'];
 		$content = trim(file_get_contents($tmpFile));
 		if(empty($content)) {
 			$this->addErrorMessage(__('The uploaded file was empty.', 'EVEShipInfo'));
-			return;
+			return false;
 		}
 
 		$root = @simplexml_load_file($tmpFile);
 		if(!$root) {
 			$this->addErrorMessage(__('The uploaded XML file could not be read, it is possibly malformed or not an XML file.', 'EVEShipInfo'));
-			return;
+			return false;
 		}
 		
+		// to read the xml, we use the json encode + decode trick,
+		// which magically creates an array with everything in it.
 		$encoded = json_encode($root);
 		$data = json_decode($encoded, true);
-		$mode = 'fresh';
-		if(isset($_REQUEST['eft_import_mode'])) {
-			$mode = $_REQUEST['eft_import_mode'];
-		}
-		
 		if(!isset($data['fitting'])) {
 			$this->addErrorMessage(__('The fitting data could not be found in the XML file.', 'EVEShipInfo'));
-			return;
+			return false;
 		}
-
+		
+		// the name hashes help recognize wich fittings already exist.
 		$this->nameHashes = get_option('eveshipinfo_name_hashes');
 		if(is_string($this->nameHashes) && !empty($this->nameHashes)) {
 			$this->nameHashes = unserialize($this->nameHashes);
@@ -186,7 +193,7 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		
 		// to clear the name hashes if needed
 		//if($mode=='fresh') {$this->nameHashes = array();}
-		
+
 		$fits = array();
 		foreach($data['fitting'] as $fit) {
 			$def = $this->loadFit($fit);
@@ -195,58 +202,182 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		
 		if(empty($fits)) {
 			$this->addErrorMessage(__('No fittings found in the XML file.', 'EVEShipInfo'));
-			return;
+			return false;
 		}
 		
-		$optionData = array(
-			'updated' => time(),
-			'fits' => $fits
-		);
+		return $fits;
+	}
+	
+   /**
+    * Processes the upload of an EFT fittings XML file: 
+    * parses the XML, and stores the new data according
+    * to the selected import mode.
+    */
+	protected function processUpload()
+	{
+		$imported = $this->parseXML();
+		if(!$imported) {
+			return;
+		}
 
 		$existing = get_option('eveshipinfo_fittings', null);
 		if( !$existing) {
-			//add_option('eveshipinfo_fittings', serialize($optionData));
 			$existing = array();
+			add_option('eveshipinfo_fittings', serialize($existing));
 		} else {
 		    $existing = unserialize($existing);
 		}
 
-		switch($mode) {
-			case 'merge':
-			    foreach($existing['fits'] as $id => $fit) {
-			    	if(!isset($optionData['fits'][$id])) {
-			    		$optionData['fits'][$id] = $fit;	
-			    	}
-			    }
-				break;
-				
-			case 'fresh':
-				// nothing to do, we just use the imported data
-				break;
-				
-			case 'new':
-			    $keep = $existing['fits'];
-				foreach($optionData['fits'] as $id => $fit) {
-					if(!isset($existing['fits'][$id])) {
-						$keep[$id] = $fit;
-					}
-				}
-				$optionData['fits'] = $keep;
-				break;
+		$validModes = array('fresh', 'merge', 'new');
+		$mode = 'fresh';
+		if(isset($_REQUEST['eft_import_mode']) && in_array($_REQUEST['eft_import_mode'], $validModes)) {
+			$mode = $_REQUEST['eft_import_mode'];
 		}
+		
+		$method = 'processUpload_'.$mode;
+		$optionData = array(
+			'updated' => time(),
+			'fits' => $this->$method($imported, $existing['fits'])
+		);
 		
 		update_option('eveshipinfo_fittings', serialize($optionData));
 		update_option('eveshipinfo_name_hashes', serialize($this->nameHashes));
 		
 		$this->eft->reload();
-
-		$this->addSuccessMessage(sprintf(
-			__('The file was imported successfully at %1$s, %2$s fits found.', 'EVEShipInfo'),
-			date('H:i:s'), 
-			$this->eft->countFittings()
-		));
 	}
 	
+	protected function processUpload_merge($imported, $existing)
+	{
+		$new = 0;
+		foreach($imported as $id => $fit) {
+			if(!isset($existing[$id])) {
+				$new++;
+			}
+		}
+		
+		$updated = 0;
+		$kept = 0;
+		foreach($existing as $id => $fit) {
+			if(isset($imported[$id])) {
+				$imported[$id]['added'] = $fit['added'];
+				$imported[$id]['visibility'] = $fit['visibility'];
+				$updated++;
+			} else {
+				$imported[$id] = $fit;
+				$kept++;
+			}
+		}
+		
+		$total = count($imported);
+		 
+		$this->addSuccessMessage(
+			sprintf(
+				__('The file was imported successfully at %1$s.', 'EVEShipInfo'),
+				date('H:i:s')
+			).' '.
+			sprintf(
+				__('Found a total of %1$s fittings.', 'EVEShipInfo'),
+				$total
+			).' '.
+			sprintf(
+				__('Of these, %1$s were new, %2$s were updated and %3$s were unchanged.', 'EVEShipInfo'),
+				$new,
+				$updated,
+				$kept	
+			)
+		);
+		
+		return $imported;
+	}
+	
+	protected function processUpload_fresh($imported, $existing)
+	{
+		$this->addSuccessMessage(
+			sprintf(
+				__('The file was imported successfully at %1$s.', 'EVEShipInfo'),
+				date('H:i:s')
+			).sprintf(
+				__('Found a total of %1$s fittings.', 'EVEShipInfo'),
+				count($imported)
+			)
+		);
+		
+		return $imported;
+	}
+	
+	protected function processUpload_new($imported, $existing)
+	{
+		$new = 0;
+		$keep = $existing;
+		foreach($imported as $id => $fit) {
+			if(!isset($existing[$id])) {
+				$keep[$id] = $fit;
+				$new++;
+			}
+		}
+		
+		$imported = $keep;
+		
+		$total = count($imported);
+		$this->addSuccessMessage(
+			sprintf(
+				__('The file was imported successfully at %1$s.', 'EVEShipInfo'),
+				date('H:i:s')
+			).sprintf(
+				__('Added %1$s new fittings, for a total of %2$s.', 'EVEShipInfo'),
+				$new,
+				$total
+			)
+		);
+		
+		return  $imported;
+	}
+	
+	/**
+	 * Goes through the raw imported data of a fit from the imported
+	 * XML document and converts it to the internal storage format.
+	 * 
+	 * Returns an array with the following structure:
+	 * 
+	 * <pre>
+	 * array(
+	 *     'id' => '[generated id]',
+	 *     'visibility' => 'public',
+	 *     'name' => 'Full rack Tachyons',
+	 *     'ship' => 'Abaddon',
+	 *     'hardware' => array(
+	 *         'low' => array(
+     *     	       'Item One',
+     *             'Item Two',
+     *             ...
+     *         ),
+	 *         'med' => array(
+     *     	       'Item One',
+     *             'Item Two',
+     *             ...
+     *         ),
+	 *         'hi' => array(
+     *     	       'Item One',
+     *             'Item Two',
+     *             ...
+     *         ),
+	 *         'rig' => array(
+     *     	       'Item One',
+     *             'Item Two',
+     *             ...
+     *         ),
+	 *         'drone' => array(
+     *             'Item One',
+     *             'Item Two',
+     *             ...
+     *         )
+	 *     )
+	 * )
+	 * </pre>
+	 * 
+	 * @param array $fit
+	 * @return array
+	 */
 	protected function loadFit($fit)
 	{
 		$ship = $fit['shipType']['@attributes']['value'];
@@ -291,12 +422,21 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 		
 		return array(
 		    'id' => $this->generateID($name),
+			'visibility' => EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC,
+			'added' => time(),
 			'name' => $name,
 			'ship' => $ship,
 			'hardware' => $hardware
 		);
 	}
 	
+   /**
+    * Generates a unique ID for each fit. This uses the name hashes
+    * collection to keep track of known fittings and attribute them IDs.
+    * 
+    * @param string $name
+    * @return integer
+    */
 	protected function generateID($name)
 	{
 		$key = md5($name);

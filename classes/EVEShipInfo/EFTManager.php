@@ -97,6 +97,8 @@ class EVEShipInfo_EFTManager
 			$this->fittings[$item['id']] = new EVEShipInfo_EFTManager_Fit(
 				$this, 
 			    $item['id'],
+				$item['visibility'],
+				$item['added'],
 				$item['name'], 
 				$item['ship'], 
 				$item['hardware']
@@ -126,5 +128,77 @@ class EVEShipInfo_EFTManager
 		$this->loaded = false;
 		$this->fittings = array();
 		return $this;
+	}
+	
+   /**
+    * Deletes a fitting from the collection. Note that the
+    * change does not get saved automatically: the {@link save()}
+    * method has to be called to commit the changes.
+    * 
+    * @param EVEShipInfo_EFTManager_Fit $fit
+    * @return boolean
+    */
+	public function deleteFitting(EVEShipInfo_EFTManager_Fit $fit)
+	{
+		$this->load();
+		
+		$id = $fit->getID();
+		
+		if(isset($this->fittings[$id])) {
+			unset($this->fittings[$id]);
+			return true;
+		}
+		
+		return false;
+	}
+
+   /**
+    * Checks whether the specified fit ID exists.
+    * @param integer $id
+    * @return boolean
+    */
+	public function idExists($id)
+	{
+		$this->load();
+		return isset($this->fittings[$id]);
+	}
+	
+   /**
+    * Saves all existing fits and any changes that may have
+    * been made to fits into the database.
+    * 
+    * @return boolean
+    */
+	public function save()
+	{
+		if(!$this->loaded) {
+			return false;
+		}
+		
+		$data = array(
+			'updated' => $this->modtime,
+			'fits' => array()
+		);
+		
+		foreach($this->fittings as $fit) {
+			$data['fits'][] = $fit->toArray();
+		} 
+		
+		update_option('eveshipinfo_fittings', serialize($data));
+		
+		return true;
+	}
+	
+   /**
+    * Creates an returns an instance of the helper class that can be
+    * used to retrieve a list of fittings matching a number of criteria.
+    * Also supports ordering the list.
+    * 
+    * @return EVEShipInfo_EFTManager_Filters
+    */
+	public function getFilters()
+	{
+		$this->plugin->loadClass('EVEShipInfo_EFTManager_Filters');
+		return new EVEShipInfo_EFTManager_Filters($this);
 	}
 }

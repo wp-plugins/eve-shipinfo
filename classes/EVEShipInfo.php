@@ -437,8 +437,11 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 	
 	protected function handle_initScripts()
 	{
-		// don't enqueue the scripts in the admin area
 		if(is_admin()) {
+			wp_register_script('eveshipinfo_admin_fittingslist', $this->getScriptURL('admin/FittingsList.js'), array('jquery'));
+			wp_enqueue_script('eveshipinfo_admin_fittingslist');
+			wp_register_style('eveshipinfo_admin', $this->getScriptURL('admin.css'));
+			wp_enqueue_style('eveshipinfo_admin');
 			return;
 		}
 		
