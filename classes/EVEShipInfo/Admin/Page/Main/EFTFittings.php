@@ -36,7 +36,9 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 				__('Have a look at the %sshortcode reference%s for examples on how to use this.', 'EVEShipInfo'),
 				'<a href="admin.php?page=eveshipinfo_shortcodes&shortcode=EFTFit">',
 				'</a>'
-			).
+			).' '.
+			__('If you mark fits as private, they will not be shown in the fittings tab in the ship info windows.', 'EVEShipInfo').' '.
+			__('You can still link them manually with the fitting shortcodes though.', 'EVEShipInfo').
 		'</p>'.
 		'<form method="post" id="form_fittings">'.
 			'<div style="float:right">'.

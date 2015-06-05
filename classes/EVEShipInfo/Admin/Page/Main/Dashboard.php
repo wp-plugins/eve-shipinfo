@@ -34,6 +34,56 @@ class EVEShipInfo_Admin_Page_Main_Dashboard extends EVEShipInfo_Admin_Page_Tab
 			->setContent($content)
 			->render();
 		
+		$html .= $this->ui->createStuffBox(__('Ship screenshots bundle', 'EVEShipInfo'))
+			->setContent($this->renderScreenshotsBundle())
+			->render();
+		
+		return $html;
+	}
+	
+	protected function renderScreenshotsBundle()
+	{
+		$folder = $this->plugin->getGalleryPath();
+		if(!is_dir($folder)) {
+			return
+			'<p>'.
+				__('No screenshots bundle is installed.').
+			'</p>'.
+			'<p>'.
+				sprintf(
+					__('To download a screenshots bundle, go to the %1$splugin download page%2$s.', 'EVEShipInfo'),
+					'<a href="'.$this->plugin->getHomepageDownloadURL().'">',
+					'</a>'
+				).
+			'</p>';
+		}
+		
+		$versionFile = $folder.'/version.txt';
+		$html = '';
+		if(file_exists($versionFile)) {
+			$html .=
+			'<p>'.
+				sprintf(
+					__('The screenshot bundle %1$s is installed.', 'EVEShipInfo'),
+					'<b>v'.file_get_contents($versionFile).'</b>'
+				).
+			'</p>';
+		} else {
+			$html .= 
+			'<p>'.
+				__('An older screenshot bundle seems to be installed.', 'EVEShipInfo').
+			'</p>';
+		}
+		
+		$html .=
+		'<p>'.
+			sprintf(
+				__('To check for updates, view the %1$splugin download page%2$s.', 'EVEShipInfo'),
+				'<a href="'.$this->plugin->getHomepageDownloadURL().'">',
+				'</a>'
+			).
+		'</p>';
+		
 		return $html;
 	}
 	

@@ -11,6 +11,16 @@ abstract class EVEShipInfo_Plugin implements EVEShipInfo_PluginInterface
 		return $this->url;
 	}
 	
+	public function getHomepageURL()
+	{
+		return 'http://www.aeonoftime.com/EVE_Online_Tools/EVE-ShipInfo-WordPress-Plugin/';
+	}
+	
+	public function getHomepageDownloadURL()
+	{
+		return $this->getHomepageURL().'/download.php';
+	}
+	
 	public function getGalleryURL()
 	{
 		return $this->url.'/gallery';

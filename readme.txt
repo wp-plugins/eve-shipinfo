@@ -2,12 +2,12 @@
 Contributors: AeonOfTime
 Tags: EVE Online
 Requires at least: 3.5
-Tested up to: 4.1
-Stable tag: 1.4
+Tested up to: 4.2
+Stable tag: 1.5
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-Puts an EVE Online ships database in your WordPress website, along with high quality screenshots and specialized shortcodes.
+Puts an EVE Online ships database in your WordPress website, along with high quality screenshots and specialized shortcodes. Optionally also integrates with your EFT fittings collection.
 
 == Description ==
 
@@ -15,11 +15,12 @@ Using shortcodes, you can link EVE Online ship names in your posts and show inli
 
 = Features =
 
-*   Portable EVE Online ships database with all 418 ships
-*   836 high quality custom ship screenshots (front/side)
+*   Portable EVE Online ships database with all 443 ships
+*   886 high quality custom ship screenshots (front/side)
 *   Link ship names to info popups or virtual ship pages within your blog
 *   Extremely customizable ship lists shortcode
 *   Ship galleries shortcode
+*   EFT fittings importer and management: show your fits alongside ships or individually using shortcodes
 *   Full integrated shortcode reference
 *   Entirely translation-ready, including all ship attribute labels
 *   For developers: easy object-oriented access to the ships database
@@ -47,6 +48,10 @@ example via FTP. You have to upload the "gallery" folder to the "eve-shipinfo" p
 
 
 == Changelog ==
+
+= 1.5 =
+* Updated data files for Carnyx expansion
+* Added the EFT fittings management
 
 = 1.4 = 
 * Updated data files for Rhea with new ships

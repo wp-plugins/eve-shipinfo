@@ -14,3 +14,13 @@ margin-top:3px;
 .widefat TD.text-info{
 color:#0074a2;
 }
+
+UL.subsubsub LI{
+padding-right:15px;
+border-right:solid 1px #ccc;
+margin-right:15px;
+}
+
+UL.subsubsub LI:last-child{
+border-right:0;
+}

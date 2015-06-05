@@ -124,25 +124,16 @@ abstract class EVEShipInfo_Admin_Page
 		            			'<td>'.
 						            '<ul class="subsubsub" style="margin-top:0;">';
 		        						$tabs = $this->getEnabledTabs();
-						        		$total = count($tabs);
-						        		$count = 0;
 						        		foreach($tabs as $tabID => $tabLabel) {
-						        			$count++;
 						        			$active = '';
 						        			if($tabID==$this->activeTab->getID()) {
 						        				$active = ' class="current"';
-						        			}
-						        			
-						        			$separator = ' | ';
-						        			if($count>=$total) {
-						        				$separator = '';
 						        			}
 						        			
 						        			$html .=
 						        			'<li>'.
 						        				'<a href="'.$this->getURL($tabID).'"'.$active.'>'.
 						        					$tabLabel.
-						        					$separator.
 						        				'</a>'.
 						        			'</li>';
 						        		}

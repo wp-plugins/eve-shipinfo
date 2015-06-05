@@ -231,7 +231,11 @@ class EVEShipInfo_EFTManager_Fit
 	
 	protected function getHardware($type)
 	{
-		return $this->hardware[$type];
+		if(isset($this->hardware[$type])) {
+			return $this->hardware[$type];
+		}
+		
+		return null;
 	}
 	
 	protected static $registeredFits = array();
@@ -264,6 +268,7 @@ class EVEShipInfo_EFTManager_Fit
 			json_encode($linkID),
 			json_encode($this->getID()),
 			json_encode($this->getName()),
+			json_encode($ship->getName()),
 			json_encode($ship->getID()),
 			json_encode($this->getHighSlots()),
 			json_encode($this->getMedSlots()),
