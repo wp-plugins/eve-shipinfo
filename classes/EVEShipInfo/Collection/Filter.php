@@ -405,7 +405,7 @@ class EVEShipInfo_Collection_Filter
     * Retrieves an indexed array with all ship object instances
     * matching the current criteria.
     * 
-    * @return multitype:<EVEShipInfo_Collection_Ship>
+    * @return EVEShipInfo_Collection_Ship[]
     */
 	public function getShips()
 	{

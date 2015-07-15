@@ -25,7 +25,7 @@ class EVEShipInfo_Admin_Page_Settings_Basic extends EVEShipInfo_Admin_Page_Tab
 		return '';
 	}
 	
-	public function render()
+	protected function _render()
 	{
 		return $this->form->render();
 	}

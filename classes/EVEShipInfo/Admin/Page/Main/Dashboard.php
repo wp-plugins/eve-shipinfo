@@ -7,7 +7,7 @@ class EVEShipInfo_Admin_Page_Main_Dashboard extends EVEShipInfo_Admin_Page_Tab
 		return __('EVE ShipInfo Dashboard', 'EVEShipInfo');
 	}
 	
-	public function render()
+	protected function _render()
 	{
 		$this->checkSystem();
 		$html = '';

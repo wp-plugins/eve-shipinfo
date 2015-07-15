@@ -17,7 +17,7 @@ class EVEShipInfo_Admin_Page_Main_Database extends EVEShipInfo_Admin_Page_Tab
     */
 	protected $filter;
 	
-	public function render()
+	protected function _render()
 	{
 		$this->collection = $this->plugin->createCollection();
 		$this->filter = $this->collection->createFilter();

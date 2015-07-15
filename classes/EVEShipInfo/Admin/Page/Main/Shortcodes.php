@@ -28,7 +28,7 @@ class EVEShipInfo_Admin_Page_Main_Shortcodes extends EVEShipInfo_Admin_Page_Tab
 		return __('Shortcodes reference', 'EVEShipInfo');
 	}
 	
-	public function render()
+	protected function _render()
 	{
 		if(isset($this->shortcode)) {
 			return $this->renderShortcode();

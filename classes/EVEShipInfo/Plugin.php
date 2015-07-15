@@ -84,7 +84,7 @@ abstract class EVEShipInfo_Plugin implements EVEShipInfo_PluginInterface
     {
     	$tokens = array();
     	foreach($attributes as $name => $value) {
-    		if(empty($value)) {
+    		if($value===null) {
     			continue;
     		}
     			
@@ -93,7 +93,28 @@ abstract class EVEShipInfo_Plugin implements EVEShipInfo_PluginInterface
     		$tokens[] = $name.'="'.$value.'"';
     	}
     
-    	return ' '.implode(' ', $tokens).' ';
+    	if(!empty($tokens)) {
+    		return ' '.implode(' ', $tokens).' ';
+    	}
+    	
+    	return '';
+    }
+    
+    public function compileStyles($styles)
+    {
+    	$tokens = array();
+    	foreach($styles as $name => $value) {
+    		if($value===null) {
+    			continue;
+    		}
+    		$tokens[] = $name . ':' . $value;	
+    	}
+    	
+    	if(!empty($tokens)) {
+	    	return ' '.implode(';', $tokens).' ';
+    	}
+    	
+    	return '';
     }
 }
 

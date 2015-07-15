@@ -148,7 +148,28 @@ abstract class EVEShipInfo_Admin_Page
 	        	}
 				$title = $this->activeTab->getTitle();
 				if(!empty($title)) {
-	            	$html .= '<h3>'.$this->activeTab->getTitle().'</h3><br/>';
+					$actionLinks = array();
+            		$actions = $this->activeTab->getActions();
+            		foreach($actions as $alias => $def) {
+            			$actionLinks[] = 
+             			'<a href="'.$this->activeTab->getActionURL($alias).'" class="button">'.
+             				'<span class="dashicons dashicons-'.$def['icon'].'"></span> '.
+             				$def['label'].
+            			'</a>';
+            		}
+					$html .=
+	            	'<div class="shipinfo-page-heading">'. 
+		            	'<h3>'.
+		            		$this->activeTab->getTitle().
+		            	'</h3>';
+	            		if(!empty($actionLinks)) {
+	            			$html .= 
+	            			'<div class="shipinfo-action-links">'. 
+	            				implode(' ', $actionLinks).
+	            			'</div>';
+	            		}
+	            		$html .=
+	            	'</div>';
 				}
 				$html .=
 	            $content.
@@ -190,8 +211,10 @@ abstract class EVEShipInfo_Admin_Page
     	if(!empty($tabID) && !$this->isDefaultTab($tabID)) {
     		$page .= '_'.strtolower($tabID);
     	}
+  
+    	$params['page'] = $page;
     	
-    	return admin_url('admin.php?page='.$page);
+    	return admin_url('admin.php?'.http_build_query($params));
     }
     
     public function isDefaultTab($tabID)

@@ -12,7 +12,7 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
     */
 	protected $eft;
 	
-	public function render()
+	protected function _render()
 	{
 		/* @var $fit EVEShipInfo_EFTManager_Fit */
 		

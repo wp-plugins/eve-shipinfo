@@ -7,12 +7,17 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 		return __('EFT fittings', 'EVEShipInfo');
 	}
 	
+	protected function configure()
+	{
+		$this->registerAction('add', __('Add new', 'EVEShipInfo'), 'plus-alt');
+	}
+	
    /**
     * @var EVEShipInfo_EFTManager
     */
 	protected $eft;
 	
-	public function render()
+	protected function _render()
 	{
 		/* @var $fit EVEShipInfo_EFTManager_Fit */
 		
@@ -41,26 +46,42 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 			__('You can still link them manually with the fitting shortcodes though.', 'EVEShipInfo').
 		'</p>'.
 		'<form method="post" id="form_fittings">'.
-			'<div style="float:right">'.
-				__('Order by:', 'EVEShipInfo').' '.
-				$filters->renderOrderBySelect().' '.
-				$filters->renderOrderDirSelect().' '.
-				'<button type="submit" name="apply_sort" class="button">'.
-					__('Apply', 'EVEShipInfo').
-				'</button>'.
+			'<div class="shipinfo-table-controls">'.
+				'<table class="shipinfo-form-table shipinfo-list-ordering">'.
+					'<tbody>'.
+						'<tr>'.
+							'<td>'.__('Order by:', 'EVEShipInfo').'</td>'.
+							'<td>'.$filters->renderOrderBySelect().'</td>'.
+							'<td>'.$filters->renderOrderDirSelect().'</td>'.
+							'<td>'.
+								'<button type="submit" name="apply_sort" class="button">'.
+									__('Apply', 'EVEShipInfo').
+								'</button>'.
+							'</td>'.
+						'</tr>'.
+					'</tbody>'.
+				'</table>'.
+				'<table class="shipinfo-form-table shipinfo-list-filtering">'.
+					'<tbody>'.
+						'<tr>'.
+							'<td><input type="text" name="filter" id="field_filter" value="'.$filters->getSearch().'" placeholder="'.__('Search, e.g. Abaddon', 'EVEShipInfo').'"/></td>'.
+							'<td>'.$filters->renderVisibilitySelect().'</td>'.
+							'<td>'.
+								'<button type="submit" name="apply_filter" value="yes" class="button"/>'.
+									'<span class="dashicons dashicons-update"></span> '.
+									__('Apply', 'EVEShipInfo').
+								'</button>'.
+							'</td>'.
+							'<td>'.
+								'<button type="button" class="button" onclick="jQuery(\'#field_filter\').val(\'\');jQuery(\'#form_fittings\').submit();">'.
+									'<span class="dashicons dashicons-no-alt"></span> '.
+									__('Reset', 'EVEShipInfo').
+								'</button>'.
+							'</td>'.
+						'</tr>'.
+					'</tbody>'.
+				'</table>'.
 			'</div>'.
-			'<p>'.
-				'<input type="text" name="filter" id="field_filter" value="'.$filters->getSearch().'" placeholder="'.__('Search, e.g. Abaddon', 'EVEShipInfo').'"/> '.
-				$filters->renderVisibilitySelect().' '.
-				'<button type="submit" name="apply_filter" value="yes" class="button"/>'.
-					'<span class="dashicons dashicons-update"></span> '.
-					__('Apply', 'EVEShipInfo').
-				'</button> '.
-				'<button type="button" class="button" onclick="jQuery(\'#field_filter\').val(\'\');jQuery(\'#form_fittings\').submit();">'.
-					'<span class="dashicons dashicons-no-alt"></span> '.
-					__('Reset', 'EVEShipInfo').
-				'</button>'.
-			'</p>'.
 			'<table class="wp-list-table widefat fixed">'.
 				'<thead>'.
 					'<tr>'.
@@ -298,5 +319,66 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 		}
 
 		return $filters;
+	}
+	
+	public function renderAction_add()
+	{
+		$html = $this->renderFittingForm('add');
+		return $html;
+	}
+	
+	protected function renderFittingForm($action)
+	{
+		$boxHTML = '';
+		
+		switch($action) {
+			case 'add':
+				$boxHTML .=
+				'<p>'.
+					__('The following lets you manually add a new fit to the EFT fittings collection.', 'EVEShipInfo').' '.
+				'</p>';
+				break;
+		}
+		
+		$form = $this->createForm('fitting')
+		->setSubmitLabel(
+			'<span class="dashicons dashicons-plus-alt"></span> '.
+			__('Add now', 'EVEShipInfo')
+		);
+		
+		$label = $form->addText('label', __('Fitting label', 'EVEShipInfo'))
+		->setRequired();
+		
+		$elShip = $form->addSelect('ship', __('Ship', 'EVEShipInfo'))
+		->setRequired()
+		->addPleaseSelect();
+		
+		
+		$collection = $this->plugin->createCollection();
+		$filter = $collection->createFilter();
+		$filter->deselectJove();
+		
+		$ships = $filter->getShips();
+		foreach($ships as $ship) {
+			$elShip->addOption($ship->getName(), $ship->getID());
+		}
+		
+		$visibility = $form->addSelect('visibility', __('Visibility'))
+		->addOption(__('Public', 'EVEShipInfo'))
+		->addOption(__('Private', 'EVEShipInfo'));
+		
+		$slots = array();
+		$high = $form->addTextarea('highslots', __('High slots'));
+		
+		$boxHTML .= $form->render();
+		
+		$html = $this->ui->createStuffBox(
+			'<span class="dashicons dashicons-plus-alt"></span> '.
+			__('Add a new fit', 'EVEShipInfo')
+		)
+		->setContent($boxHTML)
+		->render();
+		
+		return $html;
 	}
 }

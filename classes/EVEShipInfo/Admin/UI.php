@@ -13,6 +13,14 @@ class EVEShipInfo_Admin_UI
     }
     
    /**
+    * @return EVEShipInfo
+    */
+    public function getPlugin()
+    {
+    	return $this->plugin;
+    }
+    
+   /**
     * Creates a new stuff box UI element that can be used to 
     * create static or collapsible box elements.
     * 
@@ -31,6 +39,16 @@ class EVEShipInfo_Admin_UI
     	}
     	
     	return $box;
+    }
+    
+    public function createForm($name, $defaultValues=array())
+    {
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Renderable');
+    	$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form');
+    	
+    	$form = new EVEShipInfo_Admin_UI_Form($this, $name);
+    	$form->setDefaultValues($defaultValues);
+    	return $form;
     }
     
     public function renderAlertError($text)

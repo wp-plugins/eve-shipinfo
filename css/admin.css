@@ -24,3 +24,37 @@ margin-right:15px;
 UL.subsubsub LI:last-child{
 border-right:0;
 }
+
+.shipinfo-list-ordering{
+float:right;
+}
+
+.shipinfo-list-ordering TD{
+font-size:13px;
+}
+
+.shipinfo-form-table TD{
+vertical-align:middle;
+}
+
+.shipinfo-table-controls{
+margin-bottom:8px;
+}
+
+.shipinfo-page-heading{
+margin-top:10px;
+margin-bottom:40px;
+display:table;
+}
+
+.shipinfo-page-heading H3{
+display:table-cell !important;
+margin:0 !important;
+padding:0 !important;
+font-size:20px !important;
+}
+
+.shipinfo-action-links{
+display:table-cell;
+padding-left:30px;
+}

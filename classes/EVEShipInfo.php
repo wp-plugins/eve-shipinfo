@@ -764,7 +764,7 @@ var EVEShipInfo_Translation = {".
 	    return 'options-general.php?'.http_build_query($params, null, '&amp;');
 	}
 	
-	public function getAdminDashboardURL()
+	public function getAdminDashboardURL($params=array())
 	{
 		$params['page'] = 'eveshipinfo';
 		return 'admin.php?'.http_build_query($params, null, '&amp;');

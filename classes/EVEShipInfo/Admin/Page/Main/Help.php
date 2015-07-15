@@ -7,7 +7,7 @@ class EVEShipInfo_Admin_Page_Main_Help extends EVEShipInfo_Admin_Page_Tab
 		return __('Help and documentation', 'EVEShipInfo');
 	}
 	
-	public function render()
+	protected function _render()
 	{
 		return 
 		'<b>'.__('Welcome to the EVE ShipInfo documentation.').'</b> '.

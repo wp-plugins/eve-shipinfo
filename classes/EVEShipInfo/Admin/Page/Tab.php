@@ -22,14 +22,48 @@ abstract class EVEShipInfo_Admin_Page_Tab
     */
     protected $ui;
     
-	abstract public function render();
-
+    protected $activeAction = null;
+    
+    public function render()
+    {
+    	if(isset($_REQUEST['action']) && isset($this->actions[$_REQUEST['action']])) {
+    		$this->activeAction = $_REQUEST['action'];
+    		$method = 'renderAction_'.$this->activeAction;
+    		if(method_exists($this, $method)) {
+    			return $this->$method();
+    		}
+    	}
+    	
+    	return $this->_render();
+    }
+    
+	abstract protected function _render();
+	
 	public function __construct(EVEShipInfo_Admin_Page $page)
 	{
 		$this->page = $page;
 		$this->ui = $page->getUI();
 		$this->plugin = EVEShipInfo::getInstance();
 		$this->screen = get_current_screen();
+		
+		$this->configure();
+	}
+	
+	protected $actions = array();
+	
+	protected function configure()
+	{
+		// extensible to configure the tab
+	}
+	
+	protected function registerAction($name, $label, $icon=null)
+	{
+		$this->actions[$name] = array(
+			'label' => $label,
+			'icon' => $icon
+		);
+		
+		return $this;
 	}
 	
 	public function getID()
@@ -56,6 +90,12 @@ abstract class EVEShipInfo_Admin_Page_Tab
 	}
 	
 	abstract public function getTitle();
+
+	public function getActionURL($action, $params=array())
+	{
+		$params['action'] = $action;
+		return $this->getURL($params);
+	}
 	
 	public function renderAlertSuccess($message)
 	{
@@ -85,4 +125,13 @@ abstract class EVEShipInfo_Admin_Page_Tab
 		$this->page->addSuccessMessage($message);
 	}
 	
+	public function getActions()
+	{
+		return $this->actions;
+	}
+	
+	protected function createForm($name, $defaultValues=array())
+	{
+		return $this->ui->createForm($name, $defaultValues);
+	}
 }
