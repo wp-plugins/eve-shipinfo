@@ -43,8 +43,17 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 			$rowClasses[] = 'form-required';
 		}
 		
-		if(!$this->validate()) {
+		$description = $this->description;
+		
+		if($this->validated && !$this->valid) {
 			$rowClasses[] = 'form-invalid';
+			$description = 
+			'<b class="validation-message">'.
+				__('Note:', 'EVEShipInfo').' '.
+				$this->validationMessage.
+			'</b>'.
+			'<br/>'.
+			$description;
 		}
 		
 		$html =
@@ -60,10 +69,10 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 			'</th>'.
 			'<td>'.
 				$this->_renderElement();
-				if(!empty($this->description)) {
+				if(!empty($description)) {
 					$html .=
 					'<p class="description" id="tagline-'.$this->id.'">'.
-						$this->description.
+						$description.
 					'</p>';
 				}
 				$html .=
@@ -73,18 +82,43 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 		return $html;
 	}
 	
+	protected $rules = array();
+	
 	protected $validated = false;
 
-	protected $valid = false;
+	protected $valid = true;
+	
+	protected $validationMessage;
 	
 	public function validate()
 	{
 		if($this->validated) {
 			return $this->valid;
 		}
+
+		$this->validated = true;
 		
-		// FIXME
-		return true;
+		$value = $this->getValue();
+		
+		// special case: empty value
+		if($value===null || $value==='') {
+			if($this->required) {
+				$this->valid = false;
+				$this->validationMessage = __('This element is required.', 'EVEShipInfo');
+			}
+		} else {
+			foreach($this->rules as $rule) {
+				if($rule->validate($value)) {
+					continue;
+				}
+				
+				$this->valid = false;
+				$this->validationMessage = $rule->getMessage();
+				break;
+			}
+		}
+		
+		return $this->valid;
 	}
 	
 	protected $classes = array();
@@ -152,13 +186,39 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 	public function getValue()
 	{
 		if(isset($this->value)) {
-			return $this->value;
+			return $this->filter($this->value);
 		}
 		
 		if(isset($_REQUEST[$this->name])) {
-			return $_REQUEST[$this->name];
+			return $this->filter($_REQUEST[$this->name]);
 		}
 		
-		return $this->form->getDefaultValue($this->name);
+		return $this->filter($this->form->getDefaultValue($this->name));
+	}
+	
+   /**
+    * Adds a filtering function that will be applied to
+    * the value before it is validated.
+    * 
+    * @param function $filter
+    * @return EVEShipInfo_Admin_UI_Form_Element
+    */
+	public function addFilter($filter)
+	{
+		$this->filters[] = $filter;
+		return $this;
+	}
+	
+	protected function filter($value)
+	{
+		if($value===null || $value==='') {
+			return $value;
+		}
+		
+		foreach($this->filters as $filter) {
+			$value = call_user_func($filter, $value);
+		}
+		
+		return $value;
 	}
 }

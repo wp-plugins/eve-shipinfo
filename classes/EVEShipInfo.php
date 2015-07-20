@@ -795,7 +795,7 @@ var EVEShipInfo_Translation = {".
 	
 	protected static $jsIDCounter = 0;
 	
-	public function nextJSID()
+	public static function nextJSID()
 	{
 		self::$jsIDCounter++;
 		return 'esi'.self::$jsIDCounter;
@@ -842,5 +842,21 @@ var EVEShipInfo_Translation = {".
 		
 		return $this->adminUI;
 	}
+
+   /**
+    * Converts an associative array to an HTML style attribute value string.
+    * 
+    * @param string $subject
+    * @return string
+    */
+    public static function array2styleString($subject)
+    {
+        $tokens = array();
+        foreach($subject as $name => $value) {
+            $tokens[] = $name.':'.$value;
+        }
+        
+        return implode(';', $tokens);
+    }
 }
 	

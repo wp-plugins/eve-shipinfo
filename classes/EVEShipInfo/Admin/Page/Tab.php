@@ -56,7 +56,7 @@ abstract class EVEShipInfo_Admin_Page_Tab
 		// extensible to configure the tab
 	}
 	
-	protected function registerAction($name, $label, $icon=null)
+	protected function registerAction($name, $label, EVEShipInfo_Admin_UI_Icon $icon=null)
 	{
 		$this->actions[$name] = array(
 			'label' => $label,
@@ -74,6 +74,11 @@ abstract class EVEShipInfo_Admin_Page_Tab
 	public function getURL($params=array())
 	{
 		return $this->page->getURL($this->getID(), $params);
+	}
+	
+	public function getSlug()
+	{
+		return $this->page->getSlug().'_'.strtolower($this->getID());
 	}
 	
    /**
@@ -132,6 +137,13 @@ abstract class EVEShipInfo_Admin_Page_Tab
 	
 	protected function createForm($name, $defaultValues=array())
 	{
-		return $this->ui->createForm($name, $defaultValues);
+		$form = $this->ui->createForm($name, $defaultValues);
+		$form->addHiddenVar('page', $this->getSlug());
+
+		if(isset($this->activeAction)) {
+			$form->addHiddenVar('action', $this->activeAction);
+		}
+		
+		return $form;
 	}
 }

@@ -10,6 +10,11 @@ class EVEShipInfo_Admin_UI
     public function __construct(EVEShipInfo $plugin)
     {
     	$this->plugin = $plugin;
+    	
+    	$this->plugin->loadClass('EVEShipInfo_Admin_UI_Button');
+    	$this->plugin->loadClass('EVEShipInfo_Admin_UI_Icon');
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Renderable');
+    	$this->plugin->loadClass('EVEShipInfo_Admin_UI_StuffBox');
     }
     
    /**
@@ -29,9 +34,6 @@ class EVEShipInfo_Admin_UI
     */
     public function createStuffBox($title=null)
     {
-		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Renderable');
-    	$this->plugin->loadClass('EVEShipInfo_Admin_UI_StuffBox');
-    	
     	$box = new EVEShipInfo_Admin_UI_StuffBox($this, $this->plugin->nextJSID());
     	
     	if(!empty($title)) {
@@ -79,5 +81,24 @@ class EVEShipInfo_Admin_UI
     public function addSuccessMessage($message)
     {
     	
+    }
+    
+   /**
+    * Creates and returns a new button.
+    * @param string $label
+    * @return EVEShipInfo_Admin_UI_Button
+    */
+    public function button($label=null)
+    {
+    	return new EVEShipInfo_Admin_UI_Button($this, $label);
+    }
+    
+   /**
+    * Creates and returns a new icon instance.
+    * @return EVEShipInfo_Admin_UI_Icon
+    */
+    public function icon()
+    {
+    	return new EVEShipInfo_Admin_UI_Icon();
     }
 }

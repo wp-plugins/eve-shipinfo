@@ -9,4 +9,9 @@ class EVEShipInfo_Admin_UI_Form_Element_Textarea extends EVEShipInfo_Admin_UI_Fo
 			
 		return $html;
 	}
+	
+	public function setRows($rows)
+	{
+		return $this->setAttribute('rows', $rows);
+	}
 }

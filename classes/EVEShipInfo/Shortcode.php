@@ -75,8 +75,9 @@ abstract class EVEShipInfo_Shortcode
 	{
 		$examples = $this->_getExamples();
 		$tagName = $this->getTagName();
+		
 		foreach($examples as $idx => $def) {
-			$examples[$idx]['shortcode'] = str_replace('TAGNAME', $tagName, $examples[$idx]['shortcode']);
+			$examples[$idx]['shortcode'] = str_replace('TAGNAME', $tagName, $def['shortcode']);
 		}
 		
 		return $examples;
@@ -90,7 +91,8 @@ abstract class EVEShipInfo_Shortcode
 	{
 		$defaults = $this->getDefaultAttributes();
 		$attribs = $this->_describeAttributes();
-		foreach($attribs as $name => $def) {
+		$names = array_keys($attribs);
+		foreach($names as $name) {
 			$default = null;
 			if(isset($defaults[$name])) {
 				$default = $defaults[$name];

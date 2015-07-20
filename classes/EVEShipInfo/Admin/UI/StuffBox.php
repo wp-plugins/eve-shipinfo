@@ -20,6 +20,17 @@ class EVEShipInfo_Admin_UI_StuffBox extends EVEShipInfo_Admin_UI_Renderable
     	return $this;
     }
     
+   /**
+    * @var EVEShipInfo_Admin_UI_Icon
+    */
+    protected $icon;
+    
+    public function setIcon(EVEShipInfo_Admin_UI_Icon $icon)
+    {
+    	$this->icon = $icon;
+		return $this;    	
+    }
+    
     public function setCollapsible($collapsible=true)
     {
     	$this->collapsible = $collapsible;
@@ -57,13 +68,23 @@ class EVEShipInfo_Admin_UI_StuffBox extends EVEShipInfo_Admin_UI_Renderable
 				    $html .=
 	 			    '<div class="handlediv" title="'.__('Click to toggle').'" onclick="jQuery(\'#'.$this->id.'-inside\').toggle()"><br></div>';
 				}
+				
+				$title = '';
+				if(isset($this->icon)) {
+					$title = $this->icon->render() . ' ';
+				}
+				
 				if(isset($this->title)) {
+					$title .= $this->title;
+				}
+				
+				if(!empty($title)) {
 				    $handle = '';
 				    if($this->collapsible) {
 				        $handle = ' class="hndle" style="cursor:pointer;" onclick="jQuery(\'#'.$this->id.'-inside\').toggle()"';
 				    }
 					$html .=
-					'<h3'.$handle.'>'.$this->title.'</h3>';
+					'<h3'.$handle.'>'.$title.'</h3>';
 				}
 				
 				$collapsed = '';

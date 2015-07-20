@@ -17,6 +17,21 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 		$this->submittedVar = $this->id.'_submitted';
 	}
 	
+	protected $buttons = array();
+	
+   /**
+    * Adds a button to the end of the form, next to the submit button.
+    * Multiple buttons can be added this way.
+    * 
+    * @param EVEShipInfo_Admin_UI_Button $button
+    * @return EVEShipInfo_Admin_UI_Form
+    */
+	public function addButton(EVEShipInfo_Admin_UI_Button $button)
+	{
+		$this->buttons[] = $button;
+		return $this;
+	}
+	
 	public function isSubmitted()
 	{
 		if(isset($_REQUEST[$this->submittedVar]) && $_REQUEST[$this->submittedVar] == 'yes') {
@@ -36,6 +51,15 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 	{
 		$this->addHiddenVar($this->submittedVar, 'yes');
 		
+		$buttons = $this->buttons;
+		array_unshift(
+			$buttons, 
+			$this->ui->button($this->submitLabel)
+			->makeSubmit()
+			->setName('save')
+			->makePrimary()
+		);
+		
 		$html = 
 		'<form method="post" id="'.$this->getID().'">';
 			foreach($this->hiddens as $name => $value) {
@@ -53,16 +77,29 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 				'<tfoot>'.
 					'<td></td>'.
 					'<td>'.
-						'<p class="submit">'.
-							'<button type="submit" name="save" class="button button-primary">'.
-								$this->submitLabel.
-							'</button>'.
+						'<p class="submit">';
+							foreach($buttons as $button) {
+								$html .= $button->render();
+							}
+							$html .=
 						'</p>'.
 					'</td>'.		
 				'</tfoot>'.
 			'</table>'.
 		'</form>';
 		
+		// focus on the default element if it has been specified 
+		if(isset($this->defaultElement)) {
+			$html .= sprintf(
+				'<script type="text/javascript">'.
+					"jQuery(document).ready(function() {".
+						"setTimeout(function() {jQuery('#%s').focus();}, 500);".
+					"})".
+				'</script>',
+				$this->defaultElement->getID()
+			);
+		}
+							
 		return $html;
 	}
 	
@@ -145,5 +182,42 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 		}
 		
 		return null;
+	}
+	
+	protected $defaultElement;
+	
+   /**
+    * Selects which element in the form will get the focus on page load.
+    * 
+    * @param EVEShipInfo_Admin_UI_Form_Element $element
+    * @return EVEShipInfo_Admin_UI_Form
+    */
+	public function setDefaultElement(EVEShipInfo_Admin_UI_Form_Element $element)
+	{
+		$this->defaultElement = $element;
+		return $this;
+	}
+	
+   /**
+    * Validates the form if it has been submitted. Returns
+    * whether it is valid, and automatically marks elements
+    * as erroneous that have errors. 
+    * 
+    * @return boolean
+    */
+	public function validate()
+	{
+		if(!$this->isSubmitted()) {
+			return false;
+		}
+		
+		$valid = true;
+		foreach($this->elements as $element) {
+			if(!$element->validate()) {
+				$valid = false;
+			}
+		}
+		
+		return $valid;
 	}
 }

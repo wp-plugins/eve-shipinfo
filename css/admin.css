@@ -58,3 +58,11 @@ font-size:20px !important;
 display:table-cell;
 padding-left:30px;
 }
+
+p.submit BUTTON{
+margin-right:9px !important;
+}
+
+.form-invalid .validation-message{
+color:#cc0000 !important;
+}

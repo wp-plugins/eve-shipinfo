@@ -153,7 +153,7 @@ abstract class EVEShipInfo_Admin_Page
             		foreach($actions as $alias => $def) {
             			$actionLinks[] = 
              			'<a href="'.$this->activeTab->getActionURL($alias).'" class="button">'.
-             				'<span class="dashicons dashicons-'.$def['icon'].'"></span> '.
+             				$def['icon'] . ' '.
              				$def['label'].
             			'</a>';
             		}

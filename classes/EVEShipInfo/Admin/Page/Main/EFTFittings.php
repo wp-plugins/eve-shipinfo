@@ -9,7 +9,11 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 	
 	protected function configure()
 	{
-		$this->registerAction('add', __('Add new', 'EVEShipInfo'), 'plus-alt');
+		$this->registerAction(
+			'add', 
+			__('Add new', 'EVEShipInfo'), 
+			$this->ui->icon()->add()
+		);
 	}
 	
    /**
@@ -327,58 +331,142 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 		return $html;
 	}
 	
+	protected function createFittingForm()
+	{
+		$form = $this->createForm('fitting')
+		->addButton(
+			$this->ui->button(__('Cancel', 'EVEShipInfo'))
+			->link($this->getURL())
+		)
+		->setSubmitLabel(
+			$this->ui->icon()->add() . ' ' .
+			__('Add now', 'EVEShipInfo')
+		);
+		
+		$fitting = $form->addTextarea('fitting', __('EFT fitting'))
+		->addFilter('trim')
+		->setRows(15)
+		->setRequired()
+		->setDescription(
+			'<b>'.__('Howto:', 'EVEShipInfo').'</b> '.
+			sprintf(
+				__('Open the target fit in EFT, in the ship menu choose %1$s, and paste it here (press %2$s in the field).', 'EVEShipInfo'),
+				'<code>Copy to clipboard</code>',
+				'<code>CTRL+V</code>'
+			).' '.
+			__('All information, from the ship to the fit label will be retrieved automatically from the fit.', 'EVEShipInfo')
+		);
+		
+		$form->addText('label', __('Label', 'EVEShipInfo'))
+		->addFilter('trim')
+		->setDescription(
+			__('Optional:', 'EVEShipInfo').' '.
+			__('Specify this if you wish to overwrite the label of the fit.', 'EVEShipInfo')
+		);
+		
+		$form->addSelect('visibility', __('Visibility'))
+		->addOption(__('Public', 'EVEShipInfo'))
+		->addOption(__('Private', 'EVEShipInfo'));
+		
+		$form->setDefaultElement($fitting);
+		
+		return $form;
+	}		
+		
 	protected function renderFittingForm($action)
 	{
+		$form = $this->createFittingForm();
+
+		if($form->validate()) {
+			
+		}
+		
 		$boxHTML = '';
 		
 		switch($action) {
 			case 'add':
 				$boxHTML .=
 				'<p>'.
-					__('The following lets you manually add a new fit to the EFT fittings collection.', 'EVEShipInfo').' '.
+					__('The following lets you manually add a new fit to the EFT fittings collection.', 'EVEShipInfo').
 				'</p>';
 				break;
 		}
 		
-		$form = $this->createForm('fitting')
-		->setSubmitLabel(
-			'<span class="dashicons dashicons-plus-alt"></span> '.
-			__('Add now', 'EVEShipInfo')
-		);
-		
-		$label = $form->addText('label', __('Fitting label', 'EVEShipInfo'))
-		->setRequired();
-		
-		$elShip = $form->addSelect('ship', __('Ship', 'EVEShipInfo'))
-		->setRequired()
-		->addPleaseSelect();
-		
-		
-		$collection = $this->plugin->createCollection();
-		$filter = $collection->createFilter();
-		$filter->deselectJove();
-		
-		$ships = $filter->getShips();
-		foreach($ships as $ship) {
-			$elShip->addOption($ship->getName(), $ship->getID());
-		}
-		
-		$visibility = $form->addSelect('visibility', __('Visibility'))
-		->addOption(__('Public', 'EVEShipInfo'))
-		->addOption(__('Private', 'EVEShipInfo'));
-		
-		$slots = array();
-		$high = $form->addTextarea('highslots', __('High slots'));
-		
 		$boxHTML .= $form->render();
 		
-		$html = $this->ui->createStuffBox(
-			'<span class="dashicons dashicons-plus-alt"></span> '.
-			__('Add a new fit', 'EVEShipInfo')
-		)
+		$html = $this->ui->createStuffBox(__('Add a new fit', 'EVEShipInfo'))
+		->setIcon($this->ui->icon()->add())
 		->setContent($boxHTML)
 		->render();
 		
 		return $html;
 	}
 }
+
+/*
+[Exequror Navy Issue, COSMOS]
+Imperial Navy Medium Armor Repairer
+Damage Control II
+Energized Adaptive Nano Membrane II
+Energized Adaptive Nano Membrane II
+Energized Explosive Membrane II
+Magnetic Field Stabilizer II
+
+Tracking Computer II, Optimal Range Script
+Tracking Computer II, Optimal Range Script
+Cap Recharger II
+Republic Fleet 10MN Afterburner
+
+Heavy Neutron Blaster II, Void M
+Heavy Neutron Blaster II, Void M
+Heavy Neutron Blaster II, Void M
+Heavy Neutron Blaster II, Void M
+Small Tractor Beam II
+
+Medium Capacitor Control Circuit I
+Medium Capacitor Control Circuit I
+Medium Capacitor Control Circuit I
+
+Salvage Drone I x5
+
+
+
+
+[Legion, Complex Specialist]
+Centum A-Type Medium Armor Repairer
+Armor Thermic Hardener II
+Armor EM Hardener II
+Tairei's Modified Energized Adaptive Nano Membrane
+Imperial Navy Heat Sink
+
+Federation Navy Stasis Webifier
+Republic Fleet 10MN Afterburner
+Data Analyzer II
+Relic Analyzer II
+
+Heavy Pulse Laser II, Conflagration M
+Heavy Pulse Laser II, Conflagration M
+Heavy Pulse Laser II, Conflagration M
+Improved Cloaking Device II
+Salvager II
+Core Probe Launcher II, Core Scanner Probe I
+Small Tractor Beam II
+
+Medium Capacitor Control Circuit I
+Medium Energy Burst Aerator I
+Medium Nanobot Accelerator I
+
+Legion Defensive - Adaptive Augmenter
+Legion Electronics - Emergent Locus Analyzer
+Legion Engineering - Capacitor Regeneration Matrix
+Legion Propulsion - Fuel Catalyst
+Legion Offensive - Drone Synthesis Projector
+
+Valkyrie II x5
+Hammerhead II x5
+*/
+	
+	
+	
+	
+	
