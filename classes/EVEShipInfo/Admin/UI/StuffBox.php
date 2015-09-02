@@ -54,15 +54,33 @@ class EVEShipInfo_Admin_UI_StuffBox extends EVEShipInfo_Admin_UI_Renderable
     	return $this;
     }
     
+    public function makeError()
+    {
+    	return $this->addClass('meta-box-error');
+    }
+    
+    protected $classes = array();
+    
+    public function addClass($class)
+    {
+    	if(!in_array($class, $this->classes)) {
+    		$this->classes[] = $class;
+    	}
+    	
+    	return $this;
+    }
+    
 	public function render()
 	{
+		$this->addClass('meta-box-sortables');
+		
 	    $class = 'stuffbox';
 	    if($this->collapsible) {
 	    	$class = 'postbox';
 	    }
 	    
 		$html = 
-		'<div class="meta-box-sortables">'.
+		'<div class="'.implode(' ', $this->classes).'">'.
 			'<div id="'.$this->id.'" class="'.$class.'">';
 				if($this->collapsible) {
 				    $html .=

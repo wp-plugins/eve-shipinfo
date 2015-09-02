@@ -2,11 +2,11 @@
 
 class EVEShipInfo_EFTManager_Filters
 {
-	const ERROR_INVALID_ORDER_FIELD = 460001;
+	const ERROR_INVALID_ORDER_FIELD = 1001;
 	
-	const ERROR_INVALID_ORDER_DIR = 460002;
+	const ERROR_INVALID_ORDER_DIR = 1002;
 	
-	const ERROR_INVALID_INVISIBILITY_SETTING = 460003; 
+	const ERROR_INVALID_INVISIBILITY_SETTING = 1003; 
 	
    /**
     * @var EVEShipInfo_EFTManager
@@ -93,8 +93,13 @@ class EVEShipInfo_EFTManager_Filters
 	public function setOrderBy($field)
 	{
 		if(!in_array($field, $this->orderFields)) {
-			throw new InvalidArgumentException(
+			throw new EVEShipInfo_Exception(
 				'Tried setting an invalid order field',
+				sprintf(
+					'Cannot order by [%s], valid fields are [%s].',
+					$field,
+					implode(', ', $this->orderFields)	
+				),
 				self::ERROR_INVALID_ORDER_FIELD	
 			);
 		}
@@ -110,8 +115,13 @@ class EVEShipInfo_EFTManager_Filters
 	public function setOrderDir($dir)
 	{
 		if(!$this->orderDirExists($dir)) {
-			throw new InvalidArgumentException(
+			throw new EVEShipInfo_Exception(
 				'Tried setting an invalid order direction',
+				sprintf(
+					'Tried ordering in direction [%s], valid order directions are [%s].',
+					$dir,
+					'asc, desc'
+				),
 				self::ERROR_INVALID_ORDER_DIR	
 			);
 		}
@@ -232,7 +242,7 @@ class EVEShipInfo_EFTManager_Filters
 		return $html;
 	}
 
-	public function renderVisibilitySelect()
+	public function renderVisibilitySelect($name='visibility')
 	{
 		$options = array(
 			'any' => __('Any visibility', 'EVEShipInfo'),
@@ -241,7 +251,7 @@ class EVEShipInfo_EFTManager_Filters
 		);
 		
 		$html =
-		'<select name="visibility">';
+		'<select name="'.$name.'">';
 			foreach($options as $value => $label) {
 				$selected = '';
 				if($value==$this->visibility) {
@@ -264,14 +274,19 @@ class EVEShipInfo_EFTManager_Filters
 	protected $visibilities = array(
 		'any',
 		EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC,
-		EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC
+		EVEShipInfo_EFTManager_Fit::VISIBILITY_PRIVATE
 	);
 	
 	public function setVisibility($visibility)
 	{
 		if(!$this->visibilityExists($visibility)) {
-			throw new InvalidArgumentException(
+			throw new EVEShipInfo_Exception(
 				'Tried setting an invalid visibility setting.',
+				sprintf(
+					'Tried setting invisibility to [%s], valid values are [%s].',
+					$visibility,
+					implode(', ', $this->visibilities)
+				),
 				self::ERROR_INVALID_INVISIBILITY_SETTING	
 			);
 		}

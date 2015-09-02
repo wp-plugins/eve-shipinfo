@@ -5,7 +5,7 @@ class EVEShipInfo_Admin_UI_Form_Element_Select extends EVEShipInfo_Admin_UI_Form
 	protected function _renderElement()
 	{
 		if(isset($this->pleaseSelect)) {
-			array_unshift($this->options, new EVEShipInfo_Admin_UI_Form_Element_Select_Option($this->pleaseSelect, ''));
+			array_unshift($this->items, new EVEShipInfo_Admin_UI_Form_Element_Select_Option($this->pleaseSelect, ''));
 		}
 		
 		$html = 
@@ -19,7 +19,7 @@ class EVEShipInfo_Admin_UI_Form_Element_Select extends EVEShipInfo_Admin_UI_Form
 		return $html;
 	}
 	
-	protected $options = array();
+	protected $items = array();
 	
    /**
     * Adds an option to the select.
@@ -29,7 +29,7 @@ class EVEShipInfo_Admin_UI_Form_Element_Select extends EVEShipInfo_Admin_UI_Form
     */
 	public function addOption($label, $value=null)
 	{
-		$option = new EVEShipInfo_Admin_UI_Form_Element_Select_Option($label, $value);
+		$option = new EVEShipInfo_Admin_UI_Form_Element_Select_Option($this, $label, $value);
 		$this->options[] = $option;
 		return $this;
 	}
@@ -41,7 +41,7 @@ class EVEShipInfo_Admin_UI_Form_Element_Select extends EVEShipInfo_Admin_UI_Form
     */
 	public function addOptionGroup($label)
 	{
-		$group = new EVEShipInfo_Admin_UI_Form_Element_Select_OptionGroup($label);
+		$group = new EVEShipInfo_Admin_UI_Form_Element_Select_OptionGroup($this, $label);
 		$this->options[] = $group;
 		return $group;
 	}
@@ -65,8 +65,14 @@ class EVEShipInfo_Admin_UI_Form_Element_Select_Option
 	
 	protected $label;
 	
-	public function __construct($label, $value=null)
+   /**
+    * @var EVEShipInfo_Admin_UI_Form_Element_Select_Option
+    */
+	protected $select;
+	
+	public function __construct(EVEShipInfo_Admin_UI_Form_Element_Select $select, $label, $value=null)
 	{
+		$this->select = $select;
 		$this->value = $value;
 		$this->label = $label;
 	}
@@ -76,6 +82,10 @@ class EVEShipInfo_Admin_UI_Form_Element_Select_Option
 		$atts = array(
 			'value' => $this->value
 		);
+		
+		if($this->value == $this->select->getValue()) {
+			$atts['selected'] = 'selected';
+		}
 		
 		return '<option'.EVEShipInfo::getInstance()->compileAttributes($atts).'>'.$this->label.'</option>';
 	}
@@ -87,14 +97,20 @@ class EVEShipInfo_Admin_UI_Form_Element_Select_OptionGroup
 	
 	protected $options = array();
 	
-	public function __construct($label)
+   /**
+    * @var EVEShipInfo_Admin_UI_Form_Element_Select_Option
+    */
+	protected $select;
+	
+	public function __construct(EVEShipInfo_Admin_UI_Form_Element_Select $select, $label)
 	{
+		$this->select = $select;
 		$this->label = $label;
 	}
 	
 	public function addOption($label, $value=null)
 	{
-		$this->options[] = new EVEShipInfo_Admin_UI_Form_Element_Select_Option($label, $value);
+		$this->options[] = new EVEShipInfo_Admin_UI_Form_Element_Select_Option($this->select, $label, $value);
 		return $this;
 	}
 	

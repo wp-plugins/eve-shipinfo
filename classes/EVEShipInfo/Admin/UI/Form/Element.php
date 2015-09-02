@@ -2,7 +2,15 @@
 
 abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Renderable
 {
+   /**
+    * @var EVEShipInfo_Admin_UI_Form
+    */
 	protected $form;
+	
+   /**
+    * @var EVEShipInfo
+    */
+	protected $plugin;
 	
 	protected $name;
 	
@@ -14,11 +22,19 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 	
 	public function __construct(EVEShipInfo_Admin_UI_Form $form, $name, $label)
 	{
-		parent::__construct($form->getUI(), $form->getPlugin()->nextJSID());
+		$plugin = $form->getPlugin();
 		
+		parent::__construct($form->getUI(), $plugin->nextJSID());
+
+		$this->plugin = $plugin;
 		$this->form = $form;
 		$this->name = $name;
 		$this->label = $label;
+	}
+	
+	public function getName()
+	{
+		return $this->name;
 	}
 	
    /**
@@ -32,13 +48,18 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 		return $this;
 	}
 	
+	public function getTypeID()
+	{
+		return str_replace('EVEShipInfo_Admin_UI_Form_Element_', '', get_class($this));
+	}
+	
 	public function render()
 	{
 		if(!empty($this->description)) {
 			$this->setAttribute('aria-describedby', 'tagline-'.$this->id);
 		}
 		
-		$rowClasses = array('form-field');
+		$rowClasses = array('form-field', 'field-'.strtolower($this->getTypeID()));
 		if($this->required) {
 			$rowClasses[] = 'form-required';
 		}
@@ -113,7 +134,7 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 				}
 				
 				$this->valid = false;
-				$this->validationMessage = $rule->getMessage();
+				$this->validationMessage = $rule->getErrorMessage();
 				break;
 			}
 		}
@@ -196,6 +217,8 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 		return $this->filter($this->form->getDefaultValue($this->name));
 	}
 	
+	protected $filters = array();
+	
    /**
     * Adds a filtering function that will be applied to
     * the value before it is validated.
@@ -220,5 +243,114 @@ abstract class EVEShipInfo_Admin_UI_Form_Element extends EVEShipInfo_Admin_UI_Re
 		}
 		
 		return $value;
+	}
+	
+   /**
+    * Adds a callback as a validation rule. The callback function gets
+    * two parameters: the rule instance, and the element being validated.
+    * 
+    * Example callback function:
+    * 
+    * <pre>
+    * function validation_callback($value, EVEShipInfo_Admin_UI_Form_ValidationRule_Callback $rule, EVEShipInfo_Admin_UI_Form_Element $element)
+    * {
+    *     // your validation logic
+    *     if($value) {
+    *         return true;
+    *     }
+    * 
+    *     return false;
+    * }
+    * </pre>
+    * 
+    * @param mixed $callback
+    * @param string $errorMessage
+    */
+	public function addCallbackRule($callback, $errorMessage)
+	{
+		return $this->addRule($this->createCallbackRule($callback, $errorMessage));
+	}
+	
+   /**
+    * Creates a callback rule and returns it.
+    * @param mixed $callback
+    * @param string $errorMessage
+    * @return EVEShipInfo_Admin_UI_Form_ValidationRule_Callback
+    */
+	public function createCallbackRule($callback, $errorMessage)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_ValidationRule');
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_ValidationRule_Callback');
+		
+		$rule = new EVEShipInfo_Admin_UI_Form_ValidationRule_Callback(
+			$this->form,
+			$this,
+			$errorMessage,
+			$callback
+		);
+		
+		return $rule;
+	}
+	
+	public function addRegexRule($regex, $errorMessage)
+	{
+		return $this->addRule($this->createRegexRule($regex, $errorMessage));
+	}
+	
+	public function createRegexRule($regex, $errorMessage)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_ValidationRule');
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_ValidationRule_Regex');
+	
+		$rule = new EVEShipInfo_Admin_UI_Form_ValidationRule_Regex(
+			$this->form,
+			$this,
+			$errorMessage,
+			$regex
+		);
+	
+		return $rule;
+	}
+	
+	public function addRule(EVEShipInfo_Admin_UI_Form_ValidationRule $rule)
+	{
+		$this->rules[] = $rule;
+		return $this;
+	}
+	
+	protected function setSetting($name, $value)
+	{
+		return $this->plugin->setOption($this->getUID().'_'.$name, $value);
+	}
+	
+	protected function getSetting($name)
+	{
+		return $this->plugin->getOption($this->getUID().'_'.$name);
+	}
+	
+	protected function clearSetting($name)
+	{
+		return $this->plugin->clearOption($this->getUID().'_'.$name);
+	}
+
+   /**
+    * Retrieves the element's user interface id, which uniquely 
+    * identifies it, provided all forms have a unique ID specified.
+    * It is a string comprising the form name and element name.
+    * 
+    * @return string
+    */
+	protected function getUID()
+	{
+		return $this->form->getID().'-'.$this->getName();
+	}
+	
+	public function getAttribute($name, $default=null)
+	{
+		if(isset($this->attributes[$name])) {
+			return $this->attributes[$name];
+		}
+		
+		return $default;
 	}
 }

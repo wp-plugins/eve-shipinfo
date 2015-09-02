@@ -87,7 +87,14 @@ abstract class EVEShipInfo_Admin_Page
     		$this->activeTab = $this->createTab(key($this->tabs));
     	}
     	
-    	$content = $this->activeTab->render();
+    	try
+    	{
+    		$content = $this->activeTab->render();
+    	} 
+    	catch(Exception $e)
+    	{
+    		$content = $this->renderErrorBox($e);
+    	}
     	
         $html =
         '<div class="wrap">'.
@@ -99,7 +106,7 @@ abstract class EVEShipInfo_Admin_Page
 		        	foreach($this->errorMessages as $message) {
 		        		$html .=
 		        		$this->ui->renderAlertError(
-		        			'<span class="dashicons dashicons-info error-message"></span> '.
+		        			$this->ui->icon()->warning()->makeDangerous().' '.
 		        			'<b>'.__('Error:', 'EVEShipInfo').'</b> '.
 		        			$message
 		        		);
@@ -110,7 +117,17 @@ abstract class EVEShipInfo_Admin_Page
 		        	foreach($this->successMessages as $message) {
 		        		$html .=
 		        		$this->ui->renderAlertUpdated(
-		        			'<span class="dashicons dashicons-yes"></span> '.
+		        			$this->ui->icon()->yes().' '.
+		        			$message
+		        		);
+		        	}
+		        }
+
+		        if(!empty($this->warningMessages)) {
+		        	foreach($this->warningMessages as $message) {
+		        		$html .=
+		        		$this->ui->renderAlertWarning(
+		        			$this->ui->icon()->warning().' '.
 		        			$message
 		        		);
 		        	}
@@ -151,6 +168,9 @@ abstract class EVEShipInfo_Admin_Page
 					$actionLinks = array();
             		$actions = $this->activeTab->getActions();
             		foreach($actions as $alias => $def) {
+            			if(!$def['showButton']) {
+            				continue;
+            			}
             			$actionLinks[] = 
              			'<a href="'.$this->activeTab->getActionURL($alias).'" class="button">'.
              				$def['icon'] . ' '.
@@ -181,8 +201,6 @@ abstract class EVEShipInfo_Admin_Page
     
     protected function getEnabledTabs()
     {
-        $total = count($this->tabs);
-        $count = 0;
         $enabled = array();
         foreach($this->tabs as $tabID => $tabLabel) {
         	if(!$this->isTabEnabled($tabID)) {
@@ -240,6 +258,8 @@ abstract class EVEShipInfo_Admin_Page
 	
 	protected $successMessages = array();
 	
+	protected $warningMessages = array();
+	
 	public function addErrorMessage($message)
 	{
 		$this->errorMessages[] = $message;
@@ -248,5 +268,131 @@ abstract class EVEShipInfo_Admin_Page
 	public function addSuccessMessage($message)
 	{
 		$this->successMessages[] = $message;
+	}
+	
+	public function addWarningMessage($message)
+	{
+		$this->warningMessages[] = $message;
+	}
+	
+	protected function renderErrorBox(Exception $e)
+	{
+		$info = $e->getMessage();
+		if($e instanceof EVEShipInfo_Exception) {
+			$info = $e->getDetails();
+		}
+		
+		$details =
+		'<p>'.__('Error message:', 'EVEShipInfo').' <b>'.$e->getMessage().'</b></p>'.
+		'<p>'.
+		sprintf(
+			__('If you feel this error is absolutely out of place, feel free to send a bug report to %1$s.', 'EVEShipInfo'),
+				'<a href="mailto:eve@aeonoftime.com?subject=EVEShipInfo '.$this->plugin->getVersion().' Bug Report - Error '.$e->getCode().'&amp;body=Error details: '.$info.PHP_EOL.PHP_EOL.'">eve@aeonoftime.com</a>'
+			).' '.
+			__('Ideally this should include the last few things you did before you got this message.', 'EVEShipInfo').' '.
+			__('Also interesting would be to know if you can reproduce the error by doing the same thing again.', 'EVEShipInfo').
+		'</p>';
+		
+		if(!WP_DEBUG) {
+			$details .= 
+			'<p>'.
+				__('Note:', 'EVEShipInfo').' '.
+				sprintf(
+					__('Turning on the WordPress debugging mode will display more detailed information about any %1$s errors.', 'EVEShipInfo'),
+					'EVEShipInfo'
+				).
+			'</p>';
+		}
+		
+		if(WP_DEBUG && $e instanceof EVEShipInfo_Exception) {
+			$details .=
+			'<hr>'.
+			'<p>'.__('Error details:', 'EVEShipInfo').' '.$e->getDetails().'</p>'.
+			'<hr>'.
+			'<p>'.__('Full trace:', 'EVEShipInfo').'</p>'.
+			'<table class="trace-table">'.
+				'<thead>'.
+					'<tr>'.
+						'<th style="text-align:right;">'.__('File', 'EVEShipInfo').'</th>'.
+						'<th style="text-align:left;">'.__('Line', 'EVEShipInfo').'</th>'.
+						'<th>'.__('Function call', 'EVEShipInfo').'</th>'.
+					'</tr>'.
+				'</thead>'.
+				'<tbody>';
+					$trace = array_reverse($e->getTrace());
+					foreach($trace as $entry) {
+						
+						/*unset($entry['args']);
+						echo '<pre>'.print_r($entry, true).'</pre>';*/
+						
+						$file = '<span class="text-muted">-</span>';
+						if(isset($entry['file'])) {
+							$file = $this->plugin->relativizePath($entry['file']);
+						}
+						
+						if(!isset($entry['line'])) {
+							$entry['line'] = '<span class="text-muted">-</span>';
+						}
+						
+						$params = array();
+						if(isset($entry['args'])) {
+							foreach($entry['args'] as $arg) {
+								switch(gettype($arg)) {
+									case 'string':
+										$params[] = '<span style="color:#29992f">"'.$arg.'"</span>';
+										break;
+										
+									case 'boolean':
+										$val = '<span class="text-danger">true</span>';
+										if($arg===true) {
+											$val = '<span class="text-success">true</span>';
+										}
+										$params[] = $val;
+										break;
+										
+									case 'NULL':
+										$params[] = '<span class="text-muted">null</span>';
+										break;
+										
+									case 'integer':
+									case 'double':
+										$params[] = '<span style="color:#0000dd">'.$arg.'</span>';
+										break;
+										
+									case 'array':
+										$params[] = '<span style="color:#306eb4">array(</span>'.json_encode($arg).'<span style="color:#306eb4">)</span>';
+										break;
+										
+									case 'object':
+										$params[] = '<span style="color:#e36203">'.get_class($arg).'</span>'; 
+										break;
+										
+									case 'resource':
+										$params[] = '<span style="color:#e36203">resource</span>';
+										break;
+								}
+							}
+						}
+						
+						$details .=
+						'<tr>'.
+							'<td style="text-align:right;">'.$file.'</td>'.
+							'<td style="text-align:left;">'.$entry['line'].'</td>'.
+							'<td>'.$entry['function'].'('.implode(', ', $params).')</td>'.
+						'</tr>';
+					}
+					$details .=
+				'</tbody>'.
+			'</table>';
+		}
+		
+		$box = $this->ui->createStuffBox(__('Error', 'EVEShipInfo'));
+		$box->makeError();
+		$box->setAbstract(sprintf(
+			__('An exception with the code <code>%1$s</code> occurred.', 'EVEShipInfo'),
+			$e->getCode()
+		));
+		$box->setContent($details);
+		return $box->render();
 	}
 }

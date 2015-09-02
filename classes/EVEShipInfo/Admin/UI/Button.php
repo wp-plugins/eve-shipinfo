@@ -56,7 +56,7 @@ class EVEShipInfo_Admin_UI_Button
    /**
     * Styles the button as a primary button.
     * 
-    * @returns EVEShipInfo_Admin_UI_Button
+    * @return EVEShipInfo_Admin_UI_Button
     */
 	public function makePrimary()
 	{
@@ -66,7 +66,7 @@ class EVEShipInfo_Admin_UI_Button
    /**
     * Styles the button as a button for a dangerous operation, like deleting records.
     * 
-    * @returns EVEShipInfo_Admin_UI_Button
+    * @return EVEShipInfo_Admin_UI_Button
     */
 	public function makeDangerous()
 	{
@@ -76,7 +76,7 @@ class EVEShipInfo_Admin_UI_Button
    /**
     * Styles the button as an informational button.
     * 
-    * @returns EVEShipInfo_Admin_UI_Button
+    * @return EVEShipInfo_Admin_UI_Button
     */
 	public function makeInformational()
 	{
@@ -86,7 +86,7 @@ class EVEShipInfo_Admin_UI_Button
    /**
     * Styles the button as a success button.
     * 
-    * @returns EVEShipInfo_Admin_UI_Button
+    * @return EVEShipInfo_Admin_UI_Button
     */
 	public function makeSuccess()
 	{
@@ -96,7 +96,7 @@ class EVEShipInfo_Admin_UI_Button
    /**
     * Styles the button as a warning button for potentially dangerous operations.
     * 
-    * @returns EVEShipInfo_Admin_UI_Button
+    * @return EVEShipInfo_Admin_UI_Button
     */
 	public function makeWarning()
 	{
@@ -116,18 +116,23 @@ class EVEShipInfo_Admin_UI_Button
    /**
     * Turns the button into a submit button.
     * 
-    * @returns EVEShipInfo_Admin_UI_Button
+    * @return EVEShipInfo_Admin_UI_Button
     */
-	public function makeSubmit()
+	public function makeSubmit($value=null)
 	{
 		$this->type = 'submit';
+		
+		if($value) {
+			$this->setAttribute('value', $value);
+		}
+		
 		return $this;
 	}
 
    /**
     * Retrieves the button's ID attribute.
     * 
-    * @returns String
+    * @return String
     */
 	public function getID()
 	{

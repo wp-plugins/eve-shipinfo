@@ -10,6 +10,7 @@ class EVEShipInfo_EFTManager
 	public function __construct(EVEShipInfo $plugin)
 	{
 		$this->plugin = $plugin;
+		$this->plugin->loadClass('EVEShipInfo_EFTManager_Fit');
 	}
 	
 	public function getDataPath()
@@ -53,6 +54,26 @@ class EVEShipInfo_EFTManager
 	}
 	
    /**
+    * Retrieves a fitting by its name. This requires a ship name
+    * to be specified as well, since multiple fits can exist with
+    * the same name but for different ships.
+    * 
+    * @param string $name
+    * @param string $shipName
+    * @return EVEShipInfo_EFTManager_Fit|NULL
+    */
+	public function getFittingByName($name, $shipName)
+	{
+		foreach($this->fittings as $fit) {
+			if($fit->getName() == $name && $fit->getShipName() == $shipName) {
+				return $fit;
+			}
+		}
+		
+		return null;
+	}
+	
+   /**
     * Retrieves the last modification date of the EFT export XML file.
     * Note: returns null if the file does not exist, so always check the
     * return value or use the {@link hasFittings()} method first.
@@ -83,27 +104,24 @@ class EVEShipInfo_EFTManager
 		}
 		
 		$this->loaded = true;
-		$this->plugin->loadClass('EVEShipInfo_EFTManager_Fit');
 		
-		$data = get_option('eveshipinfo_fittings', null);
+		$data = $this->plugin->getOption('fittings');
 		if(!$data) {
 			return;
 		}
 		
 		$data = unserialize($data);
 		
-		$this->modtime = $data['updated'];
 		foreach($data['fits'] as $item) {
-			$this->fittings[$item['id']] = new EVEShipInfo_EFTManager_Fit(
-				$this, 
-			    $item['id'],
-				$item['visibility'],
-				$item['added'],
-				$item['name'], 
-				$item['ship'], 
-				$item['hardware']
-			);
+			$fit = EVEShipInfo_EFTManager_Fit::fromArray($this, $item);
+			$this->addFit($fit);
 		}
+	}
+	
+	protected function addFit(EVEShipInfo_EFTManager_Fit $fit)
+	{
+		$this->fittings[$fit->getID()] = $fit;
+		return $this;
 	}
 	
    /**
@@ -182,9 +200,10 @@ class EVEShipInfo_EFTManager
 		
 		foreach($this->fittings as $fit) {
 			$data['fits'][] = $fit->toArray();
+			$fit->resetModified();
 		} 
 		
-		update_option('eveshipinfo_fittings', serialize($data));
+		$this->plugin->setOption('fittings', serialize($data));
 		
 		return true;
 	}
@@ -200,5 +219,269 @@ class EVEShipInfo_EFTManager
 	{
 		$this->plugin->loadClass('EVEShipInfo_EFTManager_Filters');
 		return new EVEShipInfo_EFTManager_Filters($this);
+	}
+	
+	protected $testFits = array(
+		"[Legion, Complex Specialist]
+Centum A-Type Medium Armor Repairer
+Armor Thermic Hardener II
+Armor EM Hardener II
+Tairei's Modified Energized Adaptive Nano Membrane
+Imperial Navy Heat Sink
+		
+Federation Navy Stasis Webifier
+Republic Fleet 10MN Afterburner
+Data Analyzer II
+Relic Analyzer II
+		
+Heavy Pulse Laser II, Conflagration M
+Heavy Pulse Laser II, Conflagration M
+Heavy Pulse Laser II, Conflagration M
+Improved Cloaking Device II
+Salvager II
+Core Probe Launcher II, Core Scanner Probe I
+Small Tractor Beam II
+		
+Medium Capacitor Control Circuit I
+Medium Energy Burst Aerator I
+Medium Nanobot Accelerator I
+		
+Legion Defensive - Adaptive Augmenter
+Legion Electronics - Emergent Locus Analyzer
+Legion Engineering - Capacitor Regeneration Matrix
+Legion Propulsion - Fuel Catalyst
+Legion Offensive - Drone Synthesis Projector
+		
+Valkyrie II x5
+Hammerhead II x5
+	"
+	);
+	
+	public function parseFit($fitString)
+	{
+		if(substr($fitString, 0, 1) != '[') {
+			return false;
+		}
+		
+		$lines = array_map('trim', explode("\n", $fitString));
+		
+		$name = array_shift($lines);
+		$result = array();
+		preg_match_all('/\A\[([^,]+),([^]]+)\]\z/', $name, $result, PREG_PATTERN_ORDER);
+		if(!isset($result[0]) || !isset($result[0][0]) || empty($result[0][0])) {
+			return false;
+		}
+
+		$ship = trim($result[1][0]);
+		$label = trim($result[2][0]);
+		
+		$this->loadModules();
+		
+		$modules = array();
+		foreach($lines as $line) {
+			if(empty($line)) {
+				continue;
+			}
+			
+			if(substr($line, 0, 6) == '[empty') {
+				continue;
+			}
+			
+			// the name can have the notation name, foo
+			// where foo is the charge to use. We don't use that.
+			$tokens = explode(',', $line);
+			$name = trim(array_shift($tokens));
+			$charge = null;
+			if(count($tokens) != 0) {
+				$charge = array_shift($tokens);
+			}
+			
+			$amount = null;
+			$tokens = explode(' ', $name);
+			if(count($tokens) > 1) {
+				$last = array_pop($tokens);
+				
+				// The amount of drones, in the notation "x5"
+				if (preg_match('/\Ax[0-9]+\z/si', $last)) {
+					$amount = ltrim($last, 'x');
+					$name = implode(' ', $tokens);
+				}
+			}
+			
+			$slot = $this->getModuleSlot($name);
+			if(!$slot) {
+				continue;
+			}
+			
+			$modules[] = array(
+				'module' => $name,
+				'charge' => $charge,
+				'amount' => $amount
+			); 
+		}
+		
+		if(empty($modules)) {
+			return false;
+		}
+		
+		return array(
+			'name' => $label,
+			'ship' => $ship,
+			'modules' => $modules
+		);
+	}
+	
+	public function getModuleSlot($name)
+	{
+		if(!isset($this->modules)) {
+			$this->loadModules();
+		}
+		
+		if(isset($this->modules[$name])) {
+			return $this->modules[$name]['slot'];
+		}
+		
+		return null;
+	}
+	
+	public function getModuleMeta($name)
+	{
+		if(!isset($this->modules)) {
+			$this->loadModules();
+		}
+		
+		if(isset($this->modules[$name])) {
+			return $this->modules[$name]['meta'];
+		}
+		
+		return null;
+	}
+	
+	protected $modules;
+	
+	protected function loadModules()
+	{
+		if(isset($this->modules)) {
+			return true;
+		}
+		
+		$data = $this->plugin->loadDataFile('modules.json');
+		if($data) {
+			$this->modules = $data;
+			return true;
+		}
+		
+		$minified = $this->plugin->loadDataFile('modules.min.json');
+		if(!$minified) {
+			return false;
+		}
+		
+		// we build the unpacked modules collection so we don't
+		// have to do this manually each time. The bundled file
+		// is minified by default to save disk space to keep the 
+		// plugin as small as possible.
+		
+		$cypher = $minified['__cypher'];
+		unset($minified['__cypher']);
+		
+		$modules = array();
+		foreach($minified as $name => $def) {
+			$extracted = array();
+			$reverseKeys = array();
+			foreach($cypher['keys'] as $minKey => $key) {
+				$extracted[$key] = $def[$minKey];
+				$reverseKeys[$key] = $minKey;
+			}
+			
+			$extracted['meta'] = $cypher['meta'][$def[$reverseKeys['meta']]];
+			$extracted['slot'] = $cypher['slots'][$def[$reverseKeys['slot']]];
+			
+			$modules[$name] = $extracted;
+		}
+
+		$this->plugin->saveDataFile('modules.json', $modules);
+		$this->modules = $modules;
+		return true;
+	}
+	
+   /**
+    * Adds a new fit from an EFT copy+paste string.
+    * 
+    * @param string $fitString
+    * @param string $label
+    * @param string $visibility
+    * @param boolean $protection
+    * @return boolean|EVEShipInfo_EFTManager_Fit
+    */
+	public function addFromFitString($fitString, $label=null, $visibility='public', $protection=false)
+	{
+		$this->load();
+		
+		$id = $this->nextID();
+		$data = $this->parseFit($fitString);
+		if(!$data) {
+			return false;
+		}
+		
+		if(empty($label)) {
+			$label = $data['name'];
+		}
+		
+		$fit = EVEShipInfo_EFTManager_Fit::fromArray(
+			$this, 
+			array(
+				'id' => $id,
+				'visibility' => $visibility,
+				'added' => time(),
+				'updated' => time(),
+				'name' => $label,
+				'ship' => $data['ship'],
+				'slots' => $data['modules'],
+				$protection
+			)
+		);
+		
+		$this->addFit($fit);
+		return $fit;
+	}
+	
+   /**
+    * Creates a new ID for a fit.
+    * @return integer
+    */
+	protected function nextID()
+	{
+		$this->load();
+		
+		$id = $this->plugin->getOption('fittings_idcounter', 0);
+		$id++;
+		
+		// legacy check because the option name changed
+		foreach($this->fittings as $fit) {
+			$fitID = $fit->getID();
+			if($fitID > $id) {
+				$id = $fitID + 1;
+			}
+		}
+		
+		$this->plugin->setOption('fittings_idcounter', $id);
+		return $id;
+	}
+	
+	public function clear($ignoreProtected=true)
+	{
+		$this->load();
+		
+		$keep = array();
+		
+		if($ignoreProtected) {
+			foreach($this->fittings as $fit) {
+				if($fit->isProtected()) {
+					$keep[] = $fit;
+				}
+			}
+		}
+		
+		$this->fittings = $keep;
 	}
 }

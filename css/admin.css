@@ -1,9 +1,15 @@
-.icon-public{
+.text-success{
 color:#1fbe0e;
 }
 
-.icon-private{
+.text-dangerous,
+.text-danger,
+.text-error{
 color:#cc0000;
+}
+
+.text-muted{
+color:#999;
 }
 
 .button .dashicons{
@@ -65,4 +71,46 @@ margin-right:9px !important;
 
 .form-invalid .validation-message{
 color:#cc0000 !important;
+}
+
+.meta-box-error .stuffbox{
+border-color:#cc0000;
+}
+
+.meta-box-error .stuffbox H3{
+background:#cc0000;
+color:#fff;
+}
+
+TABLE.trace-table{
+font-size:13px;
+}
+
+/* displaying the update nag has the wrong margin when used in the wrap */
+.wrap .update-nag{
+margin-top:0;
+margin-bottom:20px;
+}
+
+.wrap .update-nag > P{
+margin:0;
+}
+
+.form-table .field-static TH,
+.form-table .field-static TD{
+padding-top:6px;
+padding-bottom:6px;
+}
+
+UL.list-toolbar > LI{
+float:left;
+margin-right:6px;
+}
+
+UL.list-toolbar LI.list-toolbar-separator{
+width:1px;
+height:28px;
+background:#ccc;
+margin-left:4px;
+margin-right:10px;
 }

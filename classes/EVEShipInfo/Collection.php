@@ -17,9 +17,9 @@
  */
 class EVEShipInfo_Collection
 {
-    const ERROR_CANNOT_OPEN_DATAFILE = 55478001;
+    const ERROR_CANNOT_OPEN_DATAFILE = 1201;
     
-    const ERROR_CANNOT_UNSERIALIZE_DATAFILE = 55478002;
+    const ERROR_CANNOT_UNSERIALIZE_DATAFILE = 1202;
     
     protected $plugin;
     

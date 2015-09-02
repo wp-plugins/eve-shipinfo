@@ -377,6 +377,11 @@ var EVEShipInfo_Ship = function(collection, data)
 		return this.data.id;
 	};
 	
+	this.GetName = function()
+	{
+		return this.data.name;
+	};
+	
 	this.HasFittings = function()
 	{
 		var fittings = this.GetFittings();

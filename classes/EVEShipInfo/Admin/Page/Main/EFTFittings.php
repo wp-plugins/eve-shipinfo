@@ -2,13 +2,34 @@
 
 class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 {
+	const ERROR_INVALID_FITTING_FORM_ACTION = 1601;
+	
 	public function getTitle()
 	{
 		return __('EFT fittings', 'EVEShipInfo');
 	}
 	
+   /**
+    * Only present if the fid request parameter is present.
+    * @var EVEShipInfo_EFTManager_Fit
+    */
+	protected $fit;
+	
 	protected function configure()
 	{
+		$this->eft = $this->plugin->createEFTManager();
+		
+		if(isset($_REQUEST['fid'])) {
+			$this->fit = $this->eft->getFittingByID($_REQUEST['fid']);
+		}
+		
+		$this->registerAction(
+			'edit', 
+			__('Edit fitting', 'EVEShipInfo'),
+			$this->ui->icon()->edit(),
+			false
+		);
+		
 		$this->registerAction(
 			'add', 
 			__('Add new', 'EVEShipInfo'), 
@@ -25,16 +46,15 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 	{
 		/* @var $fit EVEShipInfo_EFTManager_Fit */
 		
-		$this->eft = $this->plugin->createEFTManager();
-		
 		if(isset($_REQUEST['fits'])) {
 			$this->handleActions();
 		}
 		
-		if(!$this->eft->hasFittings()) {
-			return '';
-		}
-		
+		return $this->renderList();
+	}
+	
+	protected function renderList()
+	{
 		$filters = $this->configureFilters();
 		$fits = $filters->getFittings();
 		
@@ -69,7 +89,7 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 					'<tbody>'.
 						'<tr>'.
 							'<td><input type="text" name="filter" id="field_filter" value="'.$filters->getSearch().'" placeholder="'.__('Search, e.g. Abaddon', 'EVEShipInfo').'"/></td>'.
-							'<td>'.$filters->renderVisibilitySelect().'</td>'.
+							'<td>'.$filters->renderVisibilitySelect('list_visibility').'</td>'.
 							'<td>'.
 								'<button type="submit" name="apply_filter" value="yes" class="button"/>'.
 									'<span class="dashicons dashicons-update"></span> '.
@@ -89,30 +109,39 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 			'<table class="wp-list-table widefat fixed">'.
 				'<thead>'.
 					'<tr>'.
-						'<th>'.
+						'<th style="width:30px;padding-left:3px;">'.
 							'<input type="checkbox" onclick="FittingsList.ToggleAll()" class="fits-toggler" title="'.__('Select / deselect all', 'EVEShipInfo').'"/>'.
 						'</th>'.
 						'<th>'.__('Fit name', 'EVEShipInfo').'</th>'.
 						'<th>'.__('Ship', 'EVEShipInfo').'</th>'.
 						'<th>'.__('Visibility', 'EVEShipInfo').'</th>'.
-						'<th>'.__('Date added', 'EVEShipInfo').'</th>'.
-						'<th>'.__('Fit ID', 'EVEShipInfo').'</th>'.
+						'<th>'.__('Modified', 'EVEShipInfo').'</th>'.
+						'<th style="width:8%">'.__('Fit ID', 'EVEShipInfo').'</th>'.
+						'<th style="text-align:center;">'.__('Protected', 'EVEShipInfo').'</th>'.
 					'</tr>'.
 				'</thead>'.
 				'<tbody>';
 					if(empty($fits)) {
 						$boxHTML .=
 						'<tr>'.
-							'<td colspan="6" class="text-info">'.
+							'<td colspan="7" class="text-info">'.
 								'<span class="dashicons dashicons-info"></span> '.
 								'<b>'.__('No fittings found matching these criteria.', 'EVEShipInfo').'</b>'.
 							'</td>'.
 						'</tr>';	
 					} else {
 						foreach($fits as $fit) {
-							$public = '<span class="dashicons dashicons-lock icon-private"></span> '.__('Private', 'EVEShipInfo');
+							$public = $this->ui->icon()->visibilityPrivate()->makeDangerous().' '.__('Private', 'EVEShipInfo');
 							if($fit->isPublic()) {
-								$public = '<span class="dashicons dashicons-visibility icon-public"></span> '.__('Public', 'EVEShipInfo');
+								$public = $this->ui->icon()->visibilityPublic()->makeSuccess().' '.__('Public', 'EVEShipInfo');
+							}
+							
+							$invalid = '';
+							if($fit->hasInvalidSlots()) {
+								$invalid = $this->ui->icon()->warning()
+								->makeDangerous()
+								->cursorHelp()
+								->setTitle(__('This fitting has some invalid slots.', 'EVEShipInfo'));
 							}
 							
 							$boxHTML .=
@@ -120,40 +149,65 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 								'<td>'.
 									'<input type="checkbox" name="fits[]" class="fit-checkbox" value="'.$fit->getID().'"/>'.
 								'</td>'.
-								'<td>'.$fit->getName().'</td>'.
+								'<td>'.
+									'<a href="'.$fit->getAdminEditURL().'">'.
+										$fit->getName().
+									'</a> '.
+									$invalid.
+								'</td>'.
 								'<td>'.$fit->getShipName().'</td>'.
 								'<td>'.$public.'</td>'.
-								'<td>'.$fit->getDateAddedPretty().'</td>'.
+								'<td>'.$fit->getDateUpdatedPretty().'</td>'.
 								'<td>'.$fit->getID().'</td>'.
+								'<td style="text-align:center;">'.$fit->isProtectedPretty().'</td>'.
 							'</tr>';
 						}
 					}
 					$boxHTML .=
 				'</tbody>'.
 			'</table>'.
-			'<p>'.
-				__('With selected:', 'EVEShipInfo').'<br/>'.
-				'<button type="submit" class="button" name="action" value="delete">'.
-					'<span class="dashicons dashicons-no-alt"></span> '.
-					__('Delete', 'EVEShipInfo').
-				'</button> '.
-				'<button type="submit" class="button" name="action" value="makePrivate">'.
-					'<span class="dashicons dashicons-lock"></span> '.
-					__('Make private', 'EVEShipInfo').
-				'</button> '.
-				'<button type="submit" class="button" name="action" value="makePublic">'.
-					'<span class="dashicons dashicons-visibility"></span> '.
-					__('Make public', 'EVEShipInfo').
-				'</button> '.
-			'</p>'.
+			'<br>'.
+			__('With selected:', 'EVEShipInfo').'<br/>'.
+			'<ul class="list-toolbar">'.
+				'<li>'.
+					$this->ui->button(__('Delete', 'EVEShipInfo'))
+					->makeDangerous()
+					->setIcon($this->ui->icon()->delete())
+					->setName('action')
+					->makeSubmit('delete').
+				'</li>'.
+				'<li class="list-toolbar-separator"></li>'.
+				'<li>'.
+					$this->ui->button(__('Make private', 'EVEShipInfo'))
+					->setIcon($this->ui->icon()->visibilityPrivate())
+					->setName('action')
+					->makeSubmit('makePrivate').
+				'</li>'.
+				'<li>'.
+					$this->ui->button(__('Make public', 'EVEShipInfo'))
+					->setIcon($this->ui->icon()->visibilityPublic())
+					->setName('action')
+					->makeSubmit('makePublic').
+				'</li>'.
+				'<li class="list-toolbar-separator"></li>'.
+				'<li>'.
+					$this->ui->button(__('Protect', 'EVEShipInfo'))
+					->setIcon($this->ui->icon()->protect())
+					->setName('action')
+					->makeSubmit('protect').
+				'</li>'.
+				'<li>'.
+					$this->ui->button(__('Unprotect', 'EVEShipInfo'))
+					->setIcon($this->ui->icon()->unprotect())
+					->setName('action')
+					->makeSubmit('unprotect').
+				'</li>'.
+			'</ul>'.
+			'<div style="clear:both"></div>'.
 		'</form>';
 		
-		$html = $this->ui->createStuffBox(sprintf(
-			'<span class="dashicons dashicons-list-view"></span> '.
-			__('%s available fittings, uploaded on %s', 'EVEShipInfo'), 
-			$this->eft->countFittings(),
-			$this->eft->getLastModified()->format('d.m.Y H:i:s')
-		))
+		$html = $this->ui->createStuffBox(__('Available fittings', 'EVEShipInfo'))
+		->setIcon($this->ui->icon()->listView())
 		->setContent($boxHTML)
 		->render();
 		
@@ -178,7 +232,7 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 			return;
 		}
 		
-		$method = 'handleActions_'.$_REQUEST['action'];
+		$method = 'handleListAction_'.$_REQUEST['action'];
 		if(method_exists($this, $method)) {
 			$this->$method($selected);
 		}
@@ -188,7 +242,7 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
     * Handles deleting a collection of fits.
     * @param EVEShipInfo_EFTManager_Fit[] $selected
     */
-	protected function handleActions_delete($selected)
+	protected function handleListAction_delete($selected)
 	{
 		$total = 0;
 		foreach($selected as $fit) {
@@ -197,7 +251,9 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 			}
 		}
 		
-		$this->eft->save();
+		if($total > 0) {
+			$this->eft->save();
+		}
 		
 		if($total==1) {
 			return $this->addSuccessMessage(sprintf(
@@ -224,72 +280,118 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
     * Handles making a collection of fits private.
     * @param EVEShipInfo_EFTManager_Fit[] $selected
     */
-	protected function handleActions_makePrivate($selected)
+	protected function handleListAction_makePrivate($selected)
+	{
+		$this->handleListAction_visibility($selected, EVEShipInfo_EFTManager_Fit::VISIBILITY_PRIVATE);
+	}
+
+	/**
+	 * Handles making a collection of fits protected from import.
+	 * @param EVEShipInfo_EFTManager_Fit[] $selected
+	 */
+	protected function handleListAction_protect($selected)
+	{
+		$this->handleListAction_protection($selected, true);
+	}
+
+	/**
+	 * Handles making a collection of fits not protected from import.
+	 * @param EVEShipInfo_EFTManager_Fit[] $selected
+	 */
+	protected function handleListAction_unprotect($selected)
+	{
+		$this->handleListAction_protection($selected, false);
+	}
+	
+	protected function handleListAction_protection($selected, $protect)
 	{
 		$total = 0;
 		foreach($selected as $fit) {
-			if($fit->makePrivate()) {
+			if($fit->setProtection($protect)) {
 				$total++;
 			}
-		}		
+		}
 		
-		$this->eft->save();
-		
-		$total = count($selected);
+		$label = __('protected', 'EVEShipInfo');
+		if(!$protect) {
+			$label = __('not protected', 'EVEShipInfo');
+		}
+	
+		if($total > 0) {
+			$this->eft->save();
+		}
+	
 		if($total==1) {
 			return $this->addSuccessMessage(sprintf(
-				__('The fitting %1$s was successfully marked as private at %2$s.', 'EVEShipInfo'),
+				__('The fitting %1$s was successfully marked as %2$s at %3$s.', 'EVEShipInfo'),
 				$selected[0]->getName(),
+				$label,
 				date('H:i:s')
 			));
-		} 
-		
+		}
+	
 		if($total==0) {
-			return $this->addErrorMessage(
-				__('All the selected fittings were already marked as private.', 'EVEShipInfo')	
-			);
-		} 
-		
+			return $this->addErrorMessage(sprintf(
+				__('All the selected fittings were already marked as %1$s.', 'EVEShipInfo'),
+				$label
+			));
+		}
+	
 		$this->addSuccessMessage(sprintf(
-			__('%1$s fittings were successfully marked as private at %2$s.', 'EVEShipInfo'),
+			__('%1$s fittings were successfully marked as %2$s at %3$s.', 'EVEShipInfo'),
 			count($selected),
+			$label,
 			date('H:i:s')
 		));
 	}
-
+	
    /**
     * Handles making a collection of fits public.
     * @param EVEShipInfo_EFTManager_Fit[] $selected
     */
-	protected function handleActions_makePublic($selected)
+	protected function handleListAction_makePublic($selected)
+	{
+		$this->handleListAction_visibility($selected, EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC);
+	}
+	
+	protected function handleListAction_visibility($selected, $visibility)
 	{
 		$total = 0;
 		foreach($selected as $fit) {
-			if($fit->makePublic()) {
+			if($fit->setVisibility($visibility)) {
 				$total++;
 			}
 		}		
 		
-		$this->eft->save();
+		if($total > 0) {
+			$this->eft->save();
+		}
 		
-		$total = count($selected);
+		$label = __('public', 'EVEShipInfo');
+		if($visibility == EVEShipInfo_EFTManager_Fit::VISIBILITY_PRIVATE) {
+			$label = __('private', 'EVEShipInfo');
+		}
+		
 		if($total==1) {
 			return $this->addSuccessMessage(sprintf(
-				__('The fitting %1$s was successfully marked as private at %2$s.', 'EVEShipInfo'),
+				__('The fitting %1$s was successfully marked as %2$s at %3$s.', 'EVEShipInfo'),
 				$selected[0]->getName(),
+				$label,
 				date('H:i:s')
 			));
 		} 
 		
 		if($total==0) {
-			return $this->addErrorMessage(
-				__('All the selected fittings were already marked as private.', 'EVEShipInfo')	
-			);
+			return $this->addErrorMessage(sprintf(
+				__('All the selected fittings were already marked as %1$s.', 'EVEShipInfo'),
+				$label	
+			));
 		} 
 		
 		$this->addSuccessMessage(sprintf(
-			__('%1$s fittings were successfully marked as private at %2$s.', 'EVEShipInfo'),
+			__('%1$s fittings were successfully marked as %2$s at %3$s.', 'EVEShipInfo'),
 			count($selected),
+			$label,
 			date('H:i:s')
 		));
 	}
@@ -318,8 +420,8 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 			$filters->setOrderDir($_REQUEST['order_dir']);
 		}
 		
-		if(isset($_REQUEST['visibility']) && $filters->visibilityExists($_REQUEST['visibility'])) {
-			$filters->setVisibility($_REQUEST['visibility']);
+		if(isset($_REQUEST['list_visibility']) && $filters->visibilityExists($_REQUEST['list_visibility'])) {
+			$filters->setVisibility($_REQUEST['list_visibility']);
 		}
 
 		return $filters;
@@ -331,21 +433,64 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 		return $html;
 	}
 	
-	protected function createFittingForm()
+	public function renderAction_edit()
 	{
-		$form = $this->createForm('fitting')
+		$html = $this->renderFittingForm('edit');
+		
+		if($this->fit->hasInvalidSlots()) {
+			$message = 
+			'<p>'.
+				'<b>'.__('Some module slots in this fit could not be recognized.', 'EVEShipInfo').'</b> '.
+				__('This can happen for example when a fit uses old modules that have been renamed or removed from the game.', 'EVEShipInfo').' '.
+				__('The following modules could not be recognized:', 'EVEShipInfo').
+			'</p>'.
+			'<ul>';
+				$invalid = $this->fit->getInvalidSlots();
+				foreach($invalid as $item) {
+					$message .= '<li>'.$item['moduleName'].'</li>';
+				} 
+				$message .=
+			'</ul>'.
+			'<p>'.
+				__('These modules have already been stripped from the fit below.', 'EVEShipInfo').' '.
+				'<b>'.__('To remove this notice, simply save the fit as is to confirm removing the obsolete modules.', 'EVEShipInfo').'</b>'.
+			'</p>';
+				
+			$sect = $this->ui->createStuffBox(__('Invalid slots detected', 'EVEShipInfo'));
+			$sect->makeError();
+			$sect->setContent($message);
+			
+			$html = $sect->render().$html;
+		}
+		
+		return $html;
+	}
+	
+	protected function createFittingForm($action, $defaultValues=array())
+	{
+		$form = $this->createForm('fitting', $defaultValues)
 		->addButton(
 			$this->ui->button(__('Cancel', 'EVEShipInfo'))
 			->link($this->getURL())
 		)
-		->setSubmitLabel(
-			$this->ui->icon()->add() . ' ' .
-			__('Add now', 'EVEShipInfo')
-		);
+		->setSubmitLabel(__('Add now', 'EVEShipInfo'))
+		->setSubmitIcon($this->ui->icon()->add());
 		
-		$fitting = $form->addTextarea('fitting', __('EFT fitting'))
+		if($action=='edit') {
+			$form->setSubmitLabel(__('Save now', 'EVEShipInfo'));
+			$form->setSubmitIcon($this->ui->icon()->edit());
+			$form->addStatic(__('Fit ID', 'EVEShipInfo'), '<code>'.$this->fit->getID().'</code>');
+			$form->addStatic(__('Date added', 'EVEShipInfo'), $this->fit->getDateAddedPretty());
+			$form->addStatic(__('Last modified', 'EVEShipInfo'), $this->fit->getDateUpdatedPretty());
+			$form->addStatic(__('Shortcode', 'EVEShipInfo'), '<code>'.$this->fit->getShortcode().'</code>');
+			$form->addStatic(__('Shortcode (custom name)', 'EVEShipInfo'), '<code>'.$this->fit->getShortcode(__('Custom name', 'EVEShipInfo')).'</code>');
+		}
+		
+		$fitting = $form->addTextarea('fitting', __('EFT fitting', 'EVEShipInfo'))
 		->addFilter('trim')
+		->addCallbackRule(array($this, 'validateFit'), __('Could not recognize the format as an EFT fitting.'))
 		->setRows(15)
+		->matchRows()
 		->setRequired()
 		->setDescription(
 			'<b>'.__('Howto:', 'EVEShipInfo').'</b> '.
@@ -354,31 +499,102 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 				'<code>Copy to clipboard</code>',
 				'<code>CTRL+V</code>'
 			).' '.
-			__('All information, from the ship to the fit label will be retrieved automatically from the fit.', 'EVEShipInfo')
+			__('All information, from the ship to the fit label will be retrieved automatically from the fit.', 'EVEShipInfo').
+			'<br/>'.
+			'<br/>'.
+			__('When manually adding modules, ensure you write the name exactly as used ingame, including capitalization.').' '.
+			__('The order of modules is irrelevant: they are are sorted automatically.').' '.
+			__('The available slots on the ship are not checked, so you can add too many modules here.')
 		);
 		
-		$form->addText('label', __('Label', 'EVEShipInfo'))
+		$labelEl = $form->addText('label', __('Label', 'EVEShipInfo'))
 		->addFilter('trim')
-		->setDescription(
-			__('Optional:', 'EVEShipInfo').' '.
-			__('Specify this if you wish to overwrite the label of the fit.', 'EVEShipInfo')
-		);
+		->addFilter('strip_tags')
+		->addRegexRule('/\A[^,]+\z/', __('May not contain commas.'));
 		
-		$form->addSelect('visibility', __('Visibility'))
-		->addOption(__('Public', 'EVEShipInfo'))
-		->addOption(__('Private', 'EVEShipInfo'));
+		if($action=='add') {
+			$labelEl->setDescription(
+				__('Optional:', 'EVEShipInfo').' '.
+				__('Specify this if you wish to overwrite the label that comes with the fit.', 'EVEShipInfo')
+			);
+		} else {
+			$labelEl->setRequired();
+		}
+		
+		$form->addSelect('visibility', __('Visibility', 'EVEShipInfo'))
+		->addOption(__('Public', 'EVEShipInfo'), EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC)
+		->addOption(__('Private', 'EVEShipInfo'), EVEShipInfo_EFTManager_Fit::VISIBILITY_PRIVATE);
+		
+		$form->addCheckbox('protection', __('Protection', 'EVEShipInfo'))
+		->setInlineLabel(__('Protect fit from import', 'EVEShipInfo'))
+		->setDescription(__('If checked, this fit will be protected from any changes when importing fits from EFT.', 'EVEShipInfo'));
 		
 		$form->setDefaultElement($fitting);
 		
 		return $form;
 	}		
 		
+	public function validateFit($value, EVEShipInfo_Admin_UI_Form_ValidationRule_Callback $rule, EVEShipInfo_Admin_UI_Form_Element $element)
+	{
+		$manager = $this->plugin->createEFTManager();
+		$fit = $manager->parseFit($value);
+		if($fit) {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	protected function renderFittingForm($action)
 	{
-		$form = $this->createFittingForm();
-
-		if($form->validate()) {
+		$defaultValues = array(
+			'fitting' => '',
+			'label' => '',
+			'visibility' => EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC,
+			'protection' => 'no'
+		);
+		
+		$boxTitle = __('Add a new fit', 'EVEShipInfo');
+		$boxIcon = $this->ui->icon()->add();
+		
+		if($action == 'edit') {
+			$boxTitle = sprintf(
+				__('Edit the %1$s fitting %2$s', 'EVEShipInfo'), 
+				$this->fit->getShipName(), 
+				'<b>"'.$this->fit->getName().'"</b>'
+			);
 			
+			$boxIcon = $this->ui->icon()->edit();
+			$defaultValues['fitting'] = $this->fit->toEFTString();
+			$defaultValues['label'] = $this->fit->getName();
+			$defaultValues['visibility'] = $this->fit->getVisibility();
+			
+			if($this->fit->isProtected()) {
+				$defaultValues['protection'] = 'yes';
+			}
+		}
+		
+		$form = $this->createFittingForm($action, $defaultValues);
+
+		if($action == 'edit') {
+			$form->addHiddenVar('fid', $this->fit->getID());
+		}
+		
+		if($form->validate()) {
+			$values = $form->getValues();
+			$method = 'handleFormAction_'.$action;
+			if(!method_exists($this, $method)) {
+				throw new EVEShipInfo_Exception(
+					'Invalid fitting form action',
+					sprintf(
+						'The form hanlding method [%s] does not exist in the class [%s].',
+						$method,
+						get_class($this)
+					),
+					self::ERROR_INVALID_FITTING_FORM_ACTION	
+				);
+			}
+			return $this->$method($form, $values);
 		}
 		
 		$boxHTML = '';
@@ -394,79 +610,71 @@ class EVEShipInfo_Admin_Page_Main_EFTFittings extends EVEShipInfo_Admin_Page_Tab
 		
 		$boxHTML .= $form->render();
 		
-		$html = $this->ui->createStuffBox(__('Add a new fit', 'EVEShipInfo'))
-		->setIcon($this->ui->icon()->add())
+		$html = $this->ui->createStuffBox($boxTitle)
+		->setIcon($boxIcon)
 		->setContent($boxHTML)
 		->render();
 		
 		return $html;
 	}
+	
+	protected function handleFormAction_add($form, $values)
+	{
+		$fit = $this->eft->addFromFitString(
+			$values['fitting'], 
+			$values['label'], 
+			$values['visibility'], 
+			true
+		);
+		
+		$this->eft->save();
+		
+		$message = sprintf(
+			__('The fitting %1$s was added successfully at %2$s.', 'EVEShipInfo'),
+			'<i>'.$fit->getName().'</i>',
+			date('H:i:s')
+		);
+		
+		return $this->renderRedirect(
+			$this->getURL(), 
+			__('Back to the list', 'EVEShipInfo'), 
+			__('Add a new fit', 'EVEShipInfo'), 
+			$message
+		);
+	}
+	
+	protected function handleFormAction_edit($form, $values)
+	{
+		$this->fit->updateFromFitString($values['fitting']);
+		$this->fit->setVisibility($values['visibility']);
+		$this->fit->setName($values['label']);
+		$this->fit->setProtection($values['protection']);
+				
+		if($this->fit->isModified()) 
+		{
+			$this->eft->save();
+			
+			$message = sprintf(
+				__('The fitting %1$s was updated successfully at %2$s.', 'EVEShipInfo'),
+				'<i>'.$this->fit->getName().'</i>',
+				date('H:i:s')
+			);
+		} else {
+			$message = sprintf(
+				__('The fitting %1$s had no edits, and was not modified.', 'EVEShipInfo'),
+				'<i>'.$this->fit->getName().'</i>'
+			);
+		}
+		
+		return $this->renderRedirect(
+			$this->getURL(), 
+			__('Back to the list', 'EVEShipInfo'),
+			sprintf(
+				__('Edit the %1$s fitting %2$s', 'EVEShipInfo'), 
+				$this->fit->getShipName(), 
+				'<b>"'.$this->fit->getName().'"</b>'
+			),
+			$message
+		);
+	}
 }
-
-/*
-[Exequror Navy Issue, COSMOS]
-Imperial Navy Medium Armor Repairer
-Damage Control II
-Energized Adaptive Nano Membrane II
-Energized Adaptive Nano Membrane II
-Energized Explosive Membrane II
-Magnetic Field Stabilizer II
-
-Tracking Computer II, Optimal Range Script
-Tracking Computer II, Optimal Range Script
-Cap Recharger II
-Republic Fleet 10MN Afterburner
-
-Heavy Neutron Blaster II, Void M
-Heavy Neutron Blaster II, Void M
-Heavy Neutron Blaster II, Void M
-Heavy Neutron Blaster II, Void M
-Small Tractor Beam II
-
-Medium Capacitor Control Circuit I
-Medium Capacitor Control Circuit I
-Medium Capacitor Control Circuit I
-
-Salvage Drone I x5
-
-
-
-
-[Legion, Complex Specialist]
-Centum A-Type Medium Armor Repairer
-Armor Thermic Hardener II
-Armor EM Hardener II
-Tairei's Modified Energized Adaptive Nano Membrane
-Imperial Navy Heat Sink
-
-Federation Navy Stasis Webifier
-Republic Fleet 10MN Afterburner
-Data Analyzer II
-Relic Analyzer II
-
-Heavy Pulse Laser II, Conflagration M
-Heavy Pulse Laser II, Conflagration M
-Heavy Pulse Laser II, Conflagration M
-Improved Cloaking Device II
-Salvager II
-Core Probe Launcher II, Core Scanner Probe I
-Small Tractor Beam II
-
-Medium Capacitor Control Circuit I
-Medium Energy Burst Aerator I
-Medium Nanobot Accelerator I
-
-Legion Defensive - Adaptive Augmenter
-Legion Electronics - Emergent Locus Analyzer
-Legion Engineering - Capacitor Regeneration Matrix
-Legion Propulsion - Fuel Catalyst
-Legion Offensive - Drone Synthesis Projector
-
-Valkyrie II x5
-Hammerhead II x5
-*/
-	
-	
-	
-	
-	

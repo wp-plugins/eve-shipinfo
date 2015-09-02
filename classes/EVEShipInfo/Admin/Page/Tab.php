@@ -56,11 +56,12 @@ abstract class EVEShipInfo_Admin_Page_Tab
 		// extensible to configure the tab
 	}
 	
-	protected function registerAction($name, $label, EVEShipInfo_Admin_UI_Icon $icon=null)
+	protected function registerAction($name, $label, EVEShipInfo_Admin_UI_Icon $icon=null, $showButton=true)
 	{
 		$this->actions[$name] = array(
 			'label' => $label,
-			'icon' => $icon
+			'icon' => $icon,
+			'showButton' => $showButton
 		);
 		
 		return $this;
@@ -145,5 +146,29 @@ abstract class EVEShipInfo_Admin_Page_Tab
 		}
 		
 		return $form;
+	}
+	
+	protected function renderRedirect($url, $buttonLabel, $boxTitle, $message)
+	{
+		$content = 
+		'<script>setTimeout(function() { document.location=\''.$url.'\'; }, 6000);</script>'.
+		'<p>'.	
+			$message.
+		'</p>'.
+		'<hr>'.
+		'<p>'.
+			$this->ui->button($buttonLabel)
+			->makePrimary()
+			->link($url).
+		'</p>'.
+		'<p>'.
+			'<span class="spinner" style="visibility:visible;float:left;margin:0px 10px 0px 0px;"></span>'.
+			'<span class="text-muted">('.__('You  will be redirected automatically.', 'EVEShipInfo').')</span>'.
+		'</p>';
+		
+		$box = $this->ui->createStuffBox($boxTitle);
+		$box->setContent($content);
+		
+		return $box->render();
 	}
 }

@@ -68,7 +68,7 @@ class EVEShipInfo_Admin_UI
     	return $this->renderAlert('update-nag', $text);
     }
     
-    protected function renderAlert($type, $text)
+    public function renderAlert($type, $text)
     {
     	$html =
     	'<div class="'.$type.'">'.
@@ -76,11 +76,6 @@ class EVEShipInfo_Admin_UI
     	'</div>';
     	
     	return $html;
-    }
-    
-    public function addSuccessMessage($message)
-    {
-    	
     }
     
    /**

@@ -116,6 +116,72 @@ abstract class EVEShipInfo_Plugin implements EVEShipInfo_PluginInterface
     	
     	return '';
     }
+    
+    public function getOption($name, $default='')
+    {
+    	$internalName = $this->resolveInternalOptionName($name);
+    	
+    	$data = get_option($internalName, false);
+    	if($data===false) {
+    		add_option($internalName, $default);
+    		$data = $default;
+    	}
+    	
+    	return $data;
+    }
+    
+   /**
+    * Sets a plugin option that is persisted in the database, using
+    * the wordpress options table.
+    *  
+    * @param string $name
+    * @param string $value
+    * @throws EVEShipInfo_Exception
+    */
+    public function setOption($name, $value)
+    {
+    	$internalName = $this->resolveInternalOptionName($name);
+    	
+    	$this->getOption($internalName);
+    	update_option($internalName, $value);
+    }
+    
+   /**
+    * Clears a plugin option.
+    * @param string $name
+    */
+    public function clearOption($name)
+    {
+    	$internalName = $this->resolveInternalOptionName($name);
+    	delete_option($internalName);
+    }
+    
+    protected function resolveInternalOptionName($name)
+    {
+    	$internalName = 'eveshipinfo_'.$name;
+    	 
+    	// automatically use an md5 hash for option names that are too long
+    	// for the available name length
+    	if(strlen($internalName) > 64) {
+    		$internalName = 'eveshipinfo_'.md5($name);
+    	}
+    	
+    	return $internalName;
+    }
+    
+    public function relativizePath($path)
+    {
+    	$path = str_replace('\\', '/', $path);
+    	$root = str_replace('\\', '/', get_home_path());
+    	
+    	return str_replace($root, '', $path);
+    }
+    
+    public function getVersion()
+    {
+    	$data = get_plugin_data($this->getDir().'/eve-shipinfo.php', false);
+    	return $data['Version'];		
+    }
 }
 
 interface EVEShipInfo_PluginInterface

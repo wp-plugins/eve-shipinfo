@@ -23,10 +23,12 @@ class EVEShipInfo_Admin_Page_Main extends EVEShipInfo_Admin_Page
 	
 	protected function isTabEnabled($tabID)
 	{
+		/*
 	    if($tabID == 'EFTFittings') {
 	        $eft = $this->plugin->createEFTManager();
 	        return $eft->hasFittings(); 
 	    }
+	    */
 	    
 		return true;
 	}

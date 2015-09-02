@@ -31,12 +31,16 @@ class EVEShipInfo_Admin_Page_Main_Dashboard extends EVEShipInfo_Admin_Page_Tab
 		}
 		
 		$html .= $this->ui->createStuffBox(__('System health status:', 'EVEShipInfo').' '.$status)
-			->setContent($content)
-			->render();
+		->setContent($content)
+		->render();
+		
+		$html .= $this->ui->createStuffBox(__('Data files version', 'EVEShipInfo'))
+		->setContent('<code>'.$this->plugin->getDataVersion().'</code>')
+		->render();
 		
 		$html .= $this->ui->createStuffBox(__('Ship screenshots bundle', 'EVEShipInfo'))
-			->setContent($this->renderScreenshotsBundle())
-			->render();
+		->setContent($this->renderScreenshotsBundle())
+		->render();
 		
 		return $html;
 	}

@@ -47,21 +47,44 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 		return $this;
 	}
 	
+	public function setSubmitIcon(EVEShipInfo_Admin_UI_Icon $icon)
+	{
+		$this->submitIcon = $icon;
+		return $this;
+	}
+	
+   /**
+    * @var EVEShipInfo_Admin_UI_Icon
+    */
+	protected $submitIcon;
+	
 	public function render()
 	{
 		$this->addHiddenVar($this->submittedVar, 'yes');
 		
 		$buttons = $this->buttons;
-		array_unshift(
-			$buttons, 
-			$this->ui->button($this->submitLabel)
-			->makeSubmit()
-			->setName('save')
-			->makePrimary()
+		$submit = $this->ui->button($this->submitLabel)
+		->makeSubmit()
+		->setName('save')
+		->makePrimary();
+		
+		if(isset($this->submitIcon)) {
+			$submit->setIcon($this->submitIcon);
+		}
+		
+		array_unshift($buttons,	$submit);
+		
+		$formAtts = array(
+			'method' => 'POST',
+			'id' => $this->getID()
 		);
+
+		if($this->multipart) {
+			$formAtts['enctype'] = 'multipart/form-data';
+		}
 		
 		$html = 
-		'<form method="post" id="'.$this->getID().'">';
+		'<form'.$this->plugin->compileAttributes($formAtts).'>';
 			foreach($this->hiddens as $name => $value) {
 				$html .=
 				'<input type="hidden" name="'.$name.'" value="'.$value.'"/>';
@@ -144,6 +167,61 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 	}
 	
    /**
+    * Adds a file upload element.
+    * @param string $name
+    * @param string $label
+    * @return EVEShipInfo_Admin_UI_Form_Element_Upload
+    */
+	public function addUpload($name, $label)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_Element_Upload');
+		$this->setMultipart();
+		
+		return $this->addElement(new EVEShipInfo_Admin_UI_Form_Element_Upload($this, $name, $label));
+	}
+	
+   /**
+    * Adds a radio group element.
+    * @param string $name
+    * @param string $label
+    * @return EVEShipInfo_Admin_UI_Form_Element_RadioGroup
+    */
+	public function addRadioGroup($name, $label)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_Element_RadioGroup');
+		
+		return $this->addElement(new EVEShipInfo_Admin_UI_Form_Element_RadioGroup($this, $name, $label));
+	}
+
+   /**
+    * Adds a checkbox element.
+    * @param string $name
+    * @param string $label
+    * @return EVEShipInfo_Admin_UI_Form_Element_Checkbox
+    */
+	public function addCheckbox($name, $label)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_Element_Checkbox');
+		
+		return $this->addElement(new EVEShipInfo_Admin_UI_Form_Element_Checkbox($this, $name, $label));
+	}
+	
+	protected $multipart = false;
+	
+   /**
+    * Whether this is a multipart form (when using upload elements).
+    * This is automatically set to true if an upload element is added
+    * to the form.
+    * 
+    * @param bool $multipart
+    * @return EVEShipInfo_Admin_UI_Form
+    */
+	public function setMultipart($multipart=true)
+	{
+		$this->multipart = $multipart;
+	}
+	
+   /**
     * Adds a select element.
     * @param string $name
     * @param string $label
@@ -154,6 +232,13 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_Element_Select');
 
 		return $this->addElement(new EVEShipInfo_Admin_UI_Form_Element_Select($this, $name, $label));
+	}
+	
+	public function addStatic($label, $content)
+	{
+		$this->plugin->loadClass('EVEShipInfo_Admin_UI_Form_Element_Static');
+		
+		return $this->addElement(new EVEShipInfo_Admin_UI_Form_Element_Static($this, $content, $label));
 	}
 	
    /**
@@ -212,12 +297,46 @@ class EVEShipInfo_Admin_UI_Form extends EVEShipInfo_Admin_UI_Renderable
 		}
 		
 		$valid = true;
-		foreach($this->elements as $element) {
-			if(!$element->validate()) {
+		$total = count($this->elements);
+		for($i=0; $i<$total; $i++) {
+			if(!$this->elements[$i]->validate()) {
 				$valid = false;
 			}
 		}
 		
 		return $valid;
+	}
+	
+   /**
+    * Retrieves an associative array with element name > value pairs.
+    * @return multitype:<string,mixed>
+    */
+	public function getValues()
+	{
+		$values = array();
+		$total = count($this->elements);
+		for($i=0; $i<$total; $i++) {
+			$element = $this->elements[$i];
+			$values[$element->getName()] = $element->getValue();
+		}
+		
+		return $values;
+	}
+	
+   /**
+    * Retrieves a form element instance by its name.
+    * @param string $name
+    * @return EVEShipInfo_Admin_UI_Form_Element|NULL
+    */
+	public function getElementByName($name)
+	{
+		$total = count($this->elements);
+		for($i=0; $i<$total; $i++) {
+			if($this->elements[$i]->getName() == $name) {
+				return $this->elements[$i];
+			}
+		}
+		
+		return null;
 	}
 }

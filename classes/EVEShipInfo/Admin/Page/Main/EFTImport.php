@@ -12,13 +12,21 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
     */
 	protected $eft;
 	
+   /**
+    * @var EVEShipInfo_Collection
+    */
+	protected $collection;
+	
 	protected function _render()
 	{
 		/* @var $fit EVEShipInfo_EFTManager_Fit */
 		
 		$this->eft = $this->plugin->createEFTManager();
+		$this->collection = $this->plugin->createCollection();
 		
-	    if(isset($_POST['process_upload']) && $_POST['process_upload'] == 'yes') {
+		$this->createImportForm();
+		
+	    if($this->form->isSubmitted() && $this->form->validate()) {
 			$this->processUpload();
 		}
 		
@@ -62,72 +70,83 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 	    return $box->render();
 	}
 	
+   /**
+    * @var EVEShipInfo_Admin_UI_Form
+    */
+	protected $form;
+	
+	protected function createImportForm()
+	{
+		$form = $this->createForm(
+			'import',
+			array(
+				'mode' => 'merge',
+				'visibility' => EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC,
+				'ignore_protected' => 'yes'
+			)
+		);
+		
+		$form->setSubmitLabel(__('Upload and import', 'EVEShipInfo'));
+		$form->setSubmitIcon($this->ui->icon()->upload());
+		
+		$form->addUpload('file', __('EFT Export XML file', 'EVEShipInfo'))
+		->setRequired()
+		->setAccept('text/xml')
+		->setDescription(
+			'<b>'.__('Howto:', 'EVEShipInfo').'</b> '.
+			__('Open EFT, select File &gt; Import/Export to EVE &gt; Save all setups to one XML file...', 'EVEShipInfo').' '.
+			__('Save the file where you like, then upload it here.', 'EVEShipInfo')
+		);
+		
+		$form->addRadioGroup('mode', __('Import mode', 'EVEShipInfo'))
+		->addItem('fresh', '<b>'.__('Clean:', 'EVEShipInfo').'</b> '.__('Delete all existing fits before the import', 'EVEShipInfo'))
+		->addItem('merge', '<b>'.__('Merge:', 'EVEShipInfo').'</b> '.__('Add new fits, replace existing ones and keep all others', 'EVEShipInfo'))
+		->addItem('new', '<b>'.__('New only:', 'EVEShipInfo').'</b> '.__('Only add new fits, leave existing untouched', 'EVEShipInfo'))
+		->setDescription(
+			__('Specifies what to do with already existing fits and those you are importing.', 'EVEShipInfo').' '.
+			'<b>'.__('Note:', 'EVEShipInfo').'</b> '.
+			__('The fitting names are used to match existing fittings.', 'EVEShipInfo').' '.
+			__('If you changed some names in EFT, it is best to use the merge option.', 'EVEShipInfo')
+		);
+		
+		$form->addSelect('visibility', __('Visibility'))
+		->addOption(__('Public', 'EVEShipInfo'), EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC)
+		->addOption(__('Private', 'EVEShipInfo'), EVEShipInfo_EFTManager_Fit::VISIBILITY_PRIVATE)
+		->setDescription(__('The default visibility to use for all imported fits.', 'EVEShipInfo'));
+		
+		$form->addCheckbox('ignore_protected', __('Protection', 'EVEShipInfo'))
+		->setInlineLabel(__('Ignore protected fittings', 'EVEShipInfo'))
+		->setDescription(
+			__('If checked, any fittings that are set as protected will be left entirely untouched by the import.', 'EVEShipInfo').' '.
+			__('If a fitting to import has the same name as a protected one, it will not be imported.', 'EVEShipInfo').' '.
+			__('If unchecked, protected fittings will be deleted and updated like any other.', 'EVEShipInfo')
+		);
+		
+		$this->form = $form;
+	}
+	
 	protected function renderForm()
 	{
-		$html =
-		'<form method="post" enctype="multipart/form-data" class="wp-upload-form">'.
-			'<input type="hidden" name="process_upload" value="yes"/>'.
-			'<table class="form-table">'.
-				'<tbody>'.
-					'<tr>'.
-						'<th scope="row">'.
-							__('EFT Export XML file', 'EVEShipInfo').
-						'</th>'.
-						'<td>'.
-							'<input type="file" id="eft_xml_file" name="eft_xml_file" accept="text/xml"/>'.
-							'<p class="description">'.
-								'<b>'.__('Howto:', 'EVEShipInfo').'</b> '.
-								__('Open EFT, select File &gt; Import/Export to EVE &gt; Save all setups to one XML file...', 'EVEShipInfo').' '.
-								__('Save the file where you like, then upload it here.', 'EVEShipInfo').
-							'</p>'.
-						'</td>'.
-					'</tr>';
-					if($this->eft->hasFittings()) {
-						$html .=
-						'<tr>'.
-							'<th scope="row">'.
-								__('Import mode', 'EVEShipInfo').
-							'</th>'.
-							'<td>'.
-								'<label><input type="radio" name="eft_import_mode" value="fresh" checked="checked"/> <b>'.__('Clean:', 'EVEShipInfo').'</b> '.__('Delete all existing fits before the import', 'EVEShipInfo').'</label><br/>'.
-								'<label><input type="radio" name="eft_import_mode" value="merge"/> <b>'.__('Merge:', 'EVEShipInfo').'</b> '.__('Add new fits, replace existing ones and keep all others', 'EVEShipInfo').'</label><br/>'.
-								'<label><input type="radio" name="eft_import_mode" value="new"/> <b>'.__('New only:', 'EVEShipInfo').'</b> '.__('Only add new fits, leave existing untouched', 'EVEShipInfo').'</label><br/>'.
-								'<p class="description">'.
-									__('Specifies what to do with already existing fits and those you are importing.', 'EVEShipInfo').' '.
-									'<b>'.__('Warning:', 'EVEShipInfo').'</b> '.
-									__('The fit IDs depend on the fit names, so if you changed names it is best to use the merge option so any existing fits do not get lost.').
-								'</p>'.
-							'</td>'.
-						'</tr>';
-					}
-					$html .=
-					'<tr>'.
-						'<td></td>'.
-						'<td>'.
-							get_submit_button(__( 'Upload now', 'EVEShipInfo'), 'primary', 'eft-submit', false ).
-						'</td>'.
-					'</tr>'.
-				'</tbody>'.
-			'</table>'.
-		'</form>';
-		
-		return $this->ui->createStuffBox('<span class="dashicons dashicons-upload"></span> '.__('Upload EFT export'))
-			->setAbstract(
-				__('To easily share EFT fits with your readers in your posts, you can upload an EFT export here.', 'EVEShipInfo').' '.
-				__('Once you have uploaded your fits, you can use the dedicated shortcodes to display them.', 'EVEShipInfo').' '.
-				'<b>'.__('Note:', 'EVEShipInfo').'</b> '.
-				__('The EFT export format is somewhat limited.').' '.
-				__('It does not include any implants or turret/launcher charges you may have used.')
-			)
-			->setContent($html)
-			->render();
+		return $this->ui->createStuffBox(
+			'<span class="dashicons dashicons-upload"></span> '.
+			__('Upload EFT export', 'EVEShipInfo')
+		)
+		->setAbstract(
+			__('To easily share EFT fits with your readers in your posts, you can upload an EFT export here.', 'EVEShipInfo').' '.
+			__('Once you have uploaded your fits, you can use the dedicated shortcodes to display them.', 'EVEShipInfo').' '.
+			'<b>'.__('Note:', 'EVEShipInfo').'</b> '.
+			__('The EFT export format is somewhat limited.', 'EVEShipInfo').' '.
+			__('It does not include any implants or turret/launcher charges you may have used.', 'EVEShipInfo').' '.
+			__('Alternatively, you can add single fittings manually or edit them after the import.')
+		)
+		->setContent($this->form->render())
+		->render();
 	}
 	
 	protected function processDelete()
 	{
-		delete_option('eveshipinfo_name_hashes');
-		delete_option('eveshipinfo_fittings');
-		
+		$this->plugin->clearOption('fittings');
+
 		$this->eft->reload();
 		
 		$this->addSuccessMessage(
@@ -141,37 +160,20 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 	protected $nameHashes;
 	
    /**
-    * Reads the contents of the uploaded EFT fittings XML file, and
-    * tries to read it. Returns an array with all fits that were found,
-    * or false if an error occurred. In case of an error, an error message
-    * with details on what went wrong is automatically added and displayed.
-    * 
-    * @return boolean|array
+    * Processes the upload of an EFT fittings XML file: 
+    * parses the XML, and stores the new data according
+    * to the selected import mode.
     */
-	protected function parseXML()
+	protected function processUpload()
 	{
-		if(!isset($_FILES['eft_xml_file'])) {
-			$this->addErrorMessage(__('No file has been uploaded.', 'EVEShipInfo'));
-			return false;
-		}
-		
-		$ext = strtolower(pathinfo($_FILES['eft_xml_file']['name'], PATHINFO_EXTENSION));
-		if($ext != 'xml') {
-		    $this->addErrorMessage(__('The uploaded file was not an XML file.', 'EVEShipInfo'));
-			return false;
-		}
-		
-		$tmpFile = $_FILES['eft_xml_file']['tmp_name'];
-		$content = trim(file_get_contents($tmpFile));
-		if(empty($content)) {
-			$this->addErrorMessage(__('The uploaded file was empty.', 'EVEShipInfo'));
-			return false;
-		}
+		$values = $this->form->getValues();
 
-		$root = @simplexml_load_file($tmpFile);
+		$xml = $this->form->getElementByName('file')->getContent();
+		
+		$root = @simplexml_load_string($xml);
 		if(!$root) {
 			$this->addErrorMessage(__('The uploaded XML file could not be read, it is possibly malformed or not an XML file.', 'EVEShipInfo'));
-			return false;
+			return;
 		}
 		
 		// to read the xml, we use the json encode + decode trick,
@@ -183,21 +185,14 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 			return false;
 		}
 		
-		// the name hashes help recognize wich fittings already exist.
-		$this->nameHashes = get_option('eveshipinfo_name_hashes');
-		if(is_string($this->nameHashes) && !empty($this->nameHashes)) {
-			$this->nameHashes = unserialize($this->nameHashes);
-		} else {
-			$this->nameHashes = array();
-		}
-		
-		// to clear the name hashes if needed
-		//if($mode=='fresh') {$this->nameHashes = array();}
-
 		$fits = array();
 		foreach($data['fitting'] as $fit) {
-			$def = $this->loadFit($fit);
-			$fits[$def['id']] = $def;
+			$def = $this->parseFit($fit);
+			if($def===false) {
+				continue;
+			}
+			
+			$fits[] = $def;
 		}
 		
 		if(empty($fits)) {
@@ -205,132 +200,112 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 			return false;
 		}
 		
-		return $fits;
+		$ignore = false;
+		if($values['ignore_protected']=='yes') {
+			$ignore = true;
+		}
+		
+		$this->processFits($fits, $values['visibility'], $ignore, $values['mode']);
+		
+		$this->eft->save();
 	}
 	
-   /**
-    * Processes the upload of an EFT fittings XML file: 
-    * parses the XML, and stores the new data according
-    * to the selected import mode.
-    */
-	protected function processUpload()
+	protected function processFits($fits, $visibility, $ignoreProtected, $mode)
 	{
-		$imported = $this->parseXML();
-		if(!$imported) {
-			return;
-		}
-
-		$existing = get_option('eveshipinfo_fittings', null);
-		if( !$existing) {
-			$existing = array();
-			add_option('eveshipinfo_fittings', serialize($existing));
-		} else {
-		    $existing = unserialize($existing);
-		}
-
-		$validModes = array('fresh', 'merge', 'new');
-		$mode = 'fresh';
-		if(isset($_REQUEST['eft_import_mode']) && in_array($_REQUEST['eft_import_mode'], $validModes)) {
-			$mode = $_REQUEST['eft_import_mode'];
+		if($mode=='fresh') {
+			$this->eft->clear($ignoreProtected);
 		}
 		
-		$method = 'processUpload_'.$mode;
-		$optionData = array(
-			'updated' => time(),
-			'fits' => $this->$method($imported, $existing['fits'])
-		);
-		
-		update_option('eveshipinfo_fittings', serialize($optionData));
-		update_option('eveshipinfo_name_hashes', serialize($this->nameHashes));
-		
-		$this->eft->reload();
-	}
-	
-	protected function processUpload_merge($imported, $existing)
-	{
+		$existing = $this->eft->countFittings();
 		$new = 0;
-		foreach($imported as $id => $fit) {
-			if(!isset($existing[$id])) {
-				$new++;
-			}
-		}
-		
 		$updated = 0;
-		$kept = 0;
-		foreach($existing as $id => $fit) {
-			if(isset($imported[$id])) {
-				$imported[$id]['added'] = $fit['added'];
-				$imported[$id]['visibility'] = $fit['visibility'];
-				$updated++;
-			} else {
-				$imported[$id] = $fit;
-				$kept++;
-			}
-		}
+		$errors = 0;
+		$protected = 0;
 		
-		$total = count($imported);
-		 
-		$this->addSuccessMessage(
-			sprintf(
-				__('The file was imported successfully at %1$s.', 'EVEShipInfo'),
-				date('H:i:s')
-			).' '.
-			sprintf(
-				__('Found a total of %1$s fittings.', 'EVEShipInfo'),
-				$total
-			).' '.
-			sprintf(
-				__('Of these, %1$s were new, %2$s were updated and %3$s were unchanged.', 'EVEShipInfo'),
-				$new,
-				$updated,
-				$kept	
-			)
-		);
-		
-		return $imported;
-	}
-	
-	protected function processUpload_fresh($imported, $existing)
-	{
-		$this->addSuccessMessage(
-			sprintf(
-				__('The file was imported successfully at %1$s.', 'EVEShipInfo'),
-				date('H:i:s')
-			).sprintf(
-				__('Found a total of %1$s fittings.', 'EVEShipInfo'),
-				count($imported)
-			)
-		);
-		
-		return $imported;
-	}
-	
-	protected function processUpload_new($imported, $existing)
-	{
-		$new = 0;
-		$keep = $existing;
-		foreach($imported as $id => $fit) {
-			if(!isset($existing[$id])) {
-				$keep[$id] = $fit;
+		foreach($fits as $def) {
+			// check if a fit with the same name already exists
+			$fit = $this->eft->getFittingByName($def['name'], $def['ship']);
+			
+			if(!$fit) {
+				$fit = $this->eft->addFromFitString($def['fitString'], null, $visibility);
+				if(!$fit) {
+					$errors++;
+					continue;
+				}
 				$new++;
 			}
+			// in new mode there are no updates, only new fits,
+			// and in fresh mode only protected fits are there, 
+			// and they should not be updated (in fresh mode with
+			// the igore mode off, they will all have been deleted) 
+			else if($mode != 'new') 
+			{
+				// if we are not ignoring protection and the fit is protected, 
+				// do not modify it.
+				if($ignoreProtected && $fit->isProtected()) {
+					$protected++;
+					continue;
+				}
+				
+				// this fit must be a duplicate of an already imported
+				// fit during this import session - can happen :)
+				if($mode=='fresh') {
+					$errors++;
+					continue;
+				}
+				
+				if($fit->updateFromFitString($def['fitString'])) {
+					$updated++;
+				}
+			}
 		}
 		
-		$imported = $keep;
+		$kept = $existing - $updated;
 		
-		$total = count($imported);
+		if($new==0) { $new = __('none', 'EVEShipInfo');	}
+		if($updated==0) { $updated = __('none', 'EVEShipInfo');	}
+		if($kept==0) { $kept = __('none', 'EVEShipInfo');	}
+		if($protected==0) { $protected = __('none', 'EVEShipInfo');	}
+		if($errors==0) { $protected = __('none', 'EVEShipInfo');	}
+		
+		$ignoreLabel = __('No, protected fits are overwritten', 'EVEShipInfo');
+		if($ignoreProtected) {
+			$ignoreLabel = __('Yes, protected fits are left unchanged', 'EVEShipInfo');
+		}
+		
+		switch($mode) {
+			case 'new':
+				$modeLabel = __('New only', 'EVEShipInfo');
+				break;
+				
+			case 'merge':
+				$modeLabel = __('Merge', 'EVEShipInfo');
+				break;
+				
+			case 'fresh':
+				$modeLabel = __('Clean', 'EVEShipInfo');
+				break;
+		}
+		
 		$this->addSuccessMessage(
 			sprintf(
 				__('The file was imported successfully at %1$s.', 'EVEShipInfo'),
 				date('H:i:s')
-			).sprintf(
-				__('Added %1$s new fittings, for a total of %2$s.', 'EVEShipInfo'),
-				$new,
-				$total
-			)
+			).' '.
+			'<br>'.
+			'<br>'.
+			'<b>'.__('Import summary:', 'EVEShipInfo').'</b>'.
+			'<ul>'.
+				'<li>'.__('Import mode:', 'EVEShipInfo').' <b>'.$modeLabel.'</b></li>'.
+				'<li>'.__('Ignore protected fittings:', 'EVEShipInfo').' '.$ignoreLabel.'</li>'.
+				'<li>'.__('Fittings in imported file:', 'EVEShipInfo').' '.count($fits).'</li>'.
+				'<li>'.__('New:', 'EVEShipInfo').' '.$new.'</li>'.
+				'<li>'.__('Updated:', 'EVEShipInfo').' '.$updated.'</li>'.
+				'<li>'.__('Unchanged:', 'EVEShipInfo').' '.$kept.'</li>'.
+				'<li>'.__('Protected:', 'EVEShipInfo').' '.$protected.'</li>'.
+				'<li>'.__('Invalid:', 'EVEShipInfo').' '.$errors.' <span class="text-muted">('.__('Unknown ships, duplicates, etc.', 'EVEShipInfo').')</span></li>'.
+			'</ul>'
 		);
-		
-		return  $imported;
 	}
 	
 	/**
@@ -341,8 +316,6 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 	 * 
 	 * <pre>
 	 * array(
-	 *     'id' => '[generated id]',
-	 *     'visibility' => 'public',
 	 *     'name' => 'Full rack Tachyons',
 	 *     'ship' => 'Abaddon',
 	 *     'hardware' => array(
@@ -378,9 +351,13 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 	 * @param array $fit
 	 * @return array
 	 */
-	protected function loadFit($fit)
+	protected function parseFit($fit)
 	{
 		$ship = $fit['shipType']['@attributes']['value'];
+		if(!$this->collection->shipNameExists($ship)) {
+			return false;
+		}
+		
 		$name = str_replace($ship.' - ', '', $fit['@attributes']['name']);
 		
 		// fits without modules
@@ -420,40 +397,21 @@ class EVEShipInfo_Admin_Page_Main_EFTImport extends EVEShipInfo_Admin_Page_Tab
 			}
 		}
 		
+		$fitString = 
+		'['.$ship.', '.$name.']'.PHP_EOL;
+		
+		foreach($hardware as $section => $items) {
+			foreach($items as $item) {
+				$fitString .= $item.PHP_EOL;
+			}
+			$fitString .= PHP_EOL;
+		}
+		
 		return array(
-		    'id' => $this->generateID($name),
-			'visibility' => EVEShipInfo_EFTManager_Fit::VISIBILITY_PUBLIC,
-			'added' => time(),
 			'name' => $name,
 			'ship' => $ship,
-			'hardware' => $hardware
+			'hardware' => $hardware,
+			'fitString' => $fitString
 		);
-	}
-	
-   /**
-    * Generates a unique ID for each fit. This uses the name hashes
-    * collection to keep track of known fittings and attribute them IDs.
-    * 
-    * @param string $name
-    * @return integer
-    */
-	protected function generateID($name)
-	{
-		$key = md5($name);
-		if(isset($this->nameHashes[$key])) {
-			return $this->nameHashes[$key];
-		}
-		
-		$id = 0;
-		foreach($this->nameHashes as $hash => $hashID) {
-			if($hashID > $id) {
-				$id = $hashID;
-			}
-		}
-		
-		$id++;
-		
-		$this->nameHashes[$key] = $id;
-		return $id;
 	}
 }

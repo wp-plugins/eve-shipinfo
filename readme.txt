@@ -2,8 +2,8 @@
 Contributors: AeonOfTime
 Tags: EVE Online
 Requires at least: 3.5
-Tested up to: 4.2
-Stable tag: 1.5
+Tested up to: 4.3
+Stable tag: 1.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -48,6 +48,16 @@ example via FTP. You have to upload the "gallery" folder to the "eve-shipinfo" p
 
 
 == Changelog ==
+
+= 1.6 =
+* Updated data files for Galatea expansion
+* Added the possibility to add EFT fittings manually, as well as to edit them
+* Fixed the fittings list filter not allowing listing private fits only
+* Added a default z-index for the shipinfo popups
+* Now includes a ship modules database for a more intelligent fittings handling
+* Revamped some EFT fitting internals to make the system more stable
+* Fixed a number of EFT import issues
+* Placed all the groundwork for upcoming frontend updates
 
 = 1.5 =
 * Updated data files for Carnyx expansion

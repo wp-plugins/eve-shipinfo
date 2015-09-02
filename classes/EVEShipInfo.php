@@ -6,11 +6,19 @@
  * @see EVEShipInfo
  */
 
+$eveshipinfo_root = dirname(__FILE__);
+
 /**
  * The main plugin interface
  * @see EVEShipInfo_Plugin
  */
-require_once dirname(__FILE__).'/EVEShipInfo/Plugin.php';
+require_once $eveshipinfo_root.'/EVEShipInfo/Plugin.php';
+
+/**
+ * Plugin-specific Exception implementation
+ * @see EVEShipInfo_Exception
+ */
+require_once $eveshipinfo_root.'/EVEShipInfo/Exception.php';
 
 /**
  * Main plugin class for the EVE ShipInfo plugin. Registers
@@ -27,6 +35,8 @@ require_once dirname(__FILE__).'/EVEShipInfo/Plugin.php';
  */
 class EVEShipInfo extends EVEShipInfo_Plugin
 {
+	const ERROR_NOT_A_VALID_VIRTUAL_PAGE = 1301;
+	
    /**
     * The name of the request variable which is used to
     * store the requested ship ID in the custom rewrite rule.
@@ -647,19 +657,14 @@ var EVEShipInfo_Translation = {".
 	    );
 	     
 	    $eft = $this->createEFTManager();
-	    if($eft->hasFittings()) {
-	    	add_submenu_page(
-		    	'eveshipinfo',
-		    	__('EFT fittings', 'EVEShipInfo'),
-		    	__('EFT fittings', 'EVEShipInfo'),
-		    	'edit_posts',
-		    	'eveshipinfo_eftfittings',
-		    	array($this, 'handle_displayEFTFittingsPage')
-	    	);
-	    }
-	    	
-	    
-	     
+    	add_submenu_page(
+	    	'eveshipinfo',
+	    	__('EFT fittings', 'EVEShipInfo'),
+	    	__('EFT fittings', 'EVEShipInfo'),
+	    	'edit_posts',
+	    	'eveshipinfo_eftfittings',
+	    	array($this, 'handle_displayEFTFittingsPage')
+    	);
 	}
 	
 	public function handle_displayMainPage($tabID=null)
@@ -857,6 +862,76 @@ var EVEShipInfo_Translation = {".
         }
         
         return implode(';', $tokens);
+    }
+    
+    public function getDataFilePath($file)
+    {
+    	return $this->getDir().'/data/'.$file;
+    }
+    
+    protected $dataVersion;
+    
+    public function getDataVersion()
+    {
+    	if(!isset($this->dataVersion)) {
+    		$this->dataVersion = $this->loadDataFile('dbversion.nfo');
+    	}
+    	
+    	return $this->dataVersion;
+    }
+    
+    public function loadDataFile($file)
+    {
+    	$type = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    	$path = $this->getDataFilePath($file);
+    	
+    	if(!file_exists($path)) {
+    		return false;
+    	}
+    	
+    	switch($type) {
+    		case 'nfo':
+    			$data = @file_get_contents($path);
+    			if(!$data) {
+    				return false;
+    			}
+    			
+    			return $data;
+    			
+    		case 'json':
+    			$data = @file_get_contents($path);
+    			if(!$data) {
+    				return false;
+    			}
+    			
+    			return json_decode($data, true);
+    			
+    		case 'ser':
+    			$data = @file_get_contents($path);
+    			if(!$data) {
+    				return false;
+    			}
+    			 
+    			return unserialize($data);
+    	}
+    	
+    	return false;
+    }
+    
+    public function saveDataFile($file, $data)
+    {
+    	$type = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    	$path = $this->getDataFilePath($file);
+    	
+    	switch($type) {
+    		case 'json':
+    			return file_put_contents($path, json_encode($data));
+    			
+    		case 'ser':
+    			return file_put_contents($path, serialize($data));
+    	}
+    	
+    	return false;
     }
 }
 	

@@ -56,7 +56,7 @@ class EVEShipInfo_Collection_Ship
 	*/
 	protected $collection;
 	
-	const ERROR_SHIP_DOES_NOT_EXIST = 45872001;
+	const ERROR_SHIP_DOES_NOT_EXIST = 1501;
 	
 	protected function __construct(EVEShipInfo_Plugin $plugin, EVEShipInfo_Collection $collection, $shipID)
 	{
@@ -66,8 +66,12 @@ class EVEShipInfo_Collection_Ship
 		$this->name = $this->collection->getShipNameByID($shipID);
 		
 		if(empty($this->name)) {
-			throw new Exception(
+			throw new EVEShipInfo_Exception(
 				'Unknown ship',
+				sprintf(
+					'The ship with ID [%s] could not be found in the collection.',
+					$shipID
+				),
 				self::ERROR_SHIP_DOES_NOT_EXIST	
 			);
 		}

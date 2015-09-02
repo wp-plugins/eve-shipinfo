@@ -10,16 +10,51 @@ class EVEShipInfo_Admin_UI_Icon
 
     protected $attributes = array();
 
-    protected $types = array(
+    static protected $types = array(
         'ADD' => 'plus-alt',
+    	'UPLOAD' => 'upload',
+    	'YES' => 'yes',
+    	'NO' => 'no-alt',
+    	'DELETE' => 'no-alt',
+    	'VISIBILITY_PUBLIC' => 'visibility',
+    	'VISIBILITY_PRIVATE' => 'hidden',
+    	'WARNING' => 'info',
+    	'EDIT' => 'edit',
+    	'PROTECT' => 'lock',
+    	'UNPROTECT' => 'unlock',
+    	'LIST_VIEW' => 'list-view'
     );
 
+    protected static $initDone = false;
+    
     public function __construct()
     {
+    	if(!self::$initDone) {
+    		global $wp_version;
+	    	$tokens = explode('.', $wp_version);
+
+	    	// some dashicons were not present before 4.3
+    		if($tokens[0] <= 4 && $tokens[1] < 3) {
+    			self::$types['UNPROTECT'] = 'no';
+    			self::$types['VISIBILITY_PRIVATE'] = 'lock';
+    		}
+    		self::$initDone = true;
+    	}
     }
 
+    public function listView() { return $this->setType('LIST_VIEW'); }
     public function add() { return $this->setType('ADD'); }
-
+    public function delete() { return $this->setType('DELETE'); }
+    public function upload() { return $this->setType('UPLOAD'); }
+    public function protect() { return $this->setType('PROTECT'); }
+    public function unprotect() { return $this->setType('UNPROTECT'); }
+    public function yes() { return $this->setType('YES'); }
+    public function no() { return $this->setType('NO'); }
+    public function warning() { return $this->setType('WARNING'); }
+    public function edit() { return $this->setType('EDIT'); }
+    public function visibilityPublic() { return $this->setType('VISIBILITY_PUBLIC'); }
+    public function visibilityPrivate() { return $this->setType('VISIBILITY_PRIVATE'); }
+    
     /**
      * Sets the icon's type.
      * @param string $type
@@ -55,7 +90,7 @@ class EVEShipInfo_Admin_UI_Icon
 
     public function makeMuted()
     {
-        return $this->addClass('muted');
+        return $this->addClass('text-muted');
     }
 
     public function makeSuccess()
@@ -98,7 +133,7 @@ class EVEShipInfo_Admin_UI_Icon
 
     public function render()
     {
-        $this->setAttribute('class', 'dashicons dashicons-' . $this->types[$this->type] . ' ' . implode(' ', $this->classes));
+        $this->setAttribute('class', 'dashicons dashicons-' . self::$types[$this->type] . ' ' . implode(' ', $this->classes));
 
         if(!empty($this->styles)) {
             $this->setAttribute('style', EVEShipInfo::array2styleString($this->styles));
@@ -163,6 +198,11 @@ class EVEShipInfo_Admin_UI_Icon
     }
 
     protected $styles = array();
+    
+    public function setTitle($title)
+    {
+    	return $this->setAttribute('title', $title);
+    }
 }
 
 

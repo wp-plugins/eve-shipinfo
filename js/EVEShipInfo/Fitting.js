@@ -1,3 +1,6 @@
+var EVEShipInfo_SlotTypes = null; // set serverside
+var EVEShipInfo_MetaTypes = null; // set serverside
+
 /**
  * Class handling a single ship fitting: manages creating 
  * the fitting box that gets displayed when a fit link is
@@ -9,7 +12,7 @@
  * @author Sebastian Mordziol <eve@aeonoftime.com>
  * @link http://eve.aeonoftime.com
  */
-var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID, highSlots, medSlots, lowSlots, rigs, drones) 
+var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID) 
 {
 	this.linkID = linkID;
 	this.jsID = linkID + '-fit';
@@ -19,11 +22,7 @@ var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID, hi
 		'name':shipName,
 		'id':shipID
 	};
-	this.highSlots = highSlots;
-	this.medSlots = medSlots;
-	this.lowSlots = lowSlots;
-	this.rigs = rigs;
-	this.drones = drones;
+	this.slots = [];
 	this.shown = false;
 	this.rendered = false;
 	
@@ -87,48 +86,38 @@ var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID, hi
 	
 	this.ExportHTML = function()
 	{
-		var html = '';
-		
-		jQuery.each(this.highSlots, function(idx, slot) {
-			html += slot+'<br/>';
-		});
-		jQuery.each(this.medSlots, function(idx, slot) {
-			html += slot+'<br/>';
-		});
-		jQuery.each(this.lowSlots, function(idx, slot) {
-			html += slot+'<br/>';
-		});
-		jQuery.each(this.rigs, function(idx, slot) {
-			html += slot+'<br/>';
-		});
-		jQuery.each(this.drones, function(idx, slot) {
-			html += slot+'<br/>';
-		});
-		
-		return html;
+		return this.Export('<br/>', true);
 	};
 	
 	this.ExportTextonly = function()
 	{
-		var text = '';
+		return this.Export('\n', false);
+	};
+	
+	this.Export = function(lineSeparator, header)
+	{
+		var slots = this.slots;
+		var html = '';
 		
-		jQuery.each(this.highSlots, function(idx, slot) {
-			text += slot+'\n';
-		});
-		jQuery.each(this.medSlots, function(idx, slot) {
-			text += slot+'\n';
-		});
-		jQuery.each(this.lowSlots, function(idx, slot) {
-			text += slot+'\n';
-		});
-		jQuery.each(this.rigs, function(idx, slot) {
-			text += slot+'\n';
-		});
-		jQuery.each(this.drones, function(idx, slot) {
-			text += slot+'\n';
+		if(header===true) {
+			html += '[' + this.ship.name + ', '+this.GetName() + ']'+lineSeparator;
+		}
+		
+		jQuery.each(EVEShipInfo_SlotTypes, function(idx, slotType) {
+			var amount = 0;
+			jQuery.each(slots, function(idx, slot) {
+				if(slot.GetType() == slotType) {
+					html += slot.Render() + lineSeparator;
+					amount++;
+				}
+			});
+			
+			if(amount > 0) {
+				html += lineSeparator;
+			}
 		});
 		
-		return text;
+		return html;
 	};
 	
 	this.GetShipID = function()
@@ -140,4 +129,35 @@ var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID, hi
 	{
 		return this.name;
 	};
+
+	this.AddSlot = function(id, itemName, amount, slotType, meta)
+	{
+		var slot = new EVEShipInfo_Fitting_Slot(id, itemName, amount, slotType, meta);
+		this.slots.push(slot);
+		return slot;
+	};
+};
+
+var EVEShipInfo_Fitting_Slot = function(id, itemName, amount, slotType, meta)
+{
+	this.id = id;
+	this.itemName = itemName;
+	this.amount = amount;
+	this.slotType = slotType;
+	this.meta = meta;
+	
+	this.Render = function()
+	{
+		var text = this.itemName;
+		if(this.amount !== null && this.amount > 0) {
+			text += ' x '+this.amount;
+		}
+		
+		return text;
+	},
+	
+	this.GetType = function()
+	{
+		return this.slotType;
+	}
 };
