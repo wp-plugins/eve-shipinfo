@@ -22,7 +22,8 @@ class EVEShipInfo_Admin_UI_Icon
     	'EDIT' => 'edit',
     	'PROTECT' => 'lock',
     	'UNPROTECT' => 'unlock',
-    	'LIST_VIEW' => 'list-view'
+    	'LIST_VIEW' => 'list-view',
+    	'THEME' => 'admin-appearance'
     );
 
     protected static $initDone = false;
@@ -42,6 +43,7 @@ class EVEShipInfo_Admin_UI_Icon
     	}
     }
 
+    public function theme() { return $this->setType('THEME'); }
     public function listView() { return $this->setType('LIST_VIEW'); }
     public function add() { return $this->setType('ADD'); }
     public function delete() { return $this->setType('DELETE'); }

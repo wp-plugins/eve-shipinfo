@@ -26,6 +26,16 @@ var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID)
 	this.shown = false;
 	this.rendered = false;
 	
+	this.ElementID = function(part)
+	{
+		return this.jsID+'_'+part;
+	};
+	
+	this.Element = function(part)
+	{
+		return jQuery('#'+this.ElementID(part));
+	};
+
 	this.Show = function()
 	{
 		if(this.shown) {
@@ -43,22 +53,25 @@ var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID)
 			'<div id="'+this.jsID+'" class="shipinfo-fittingbox">'+
 				'<div class="shipinfo-fittingbox-wrap">'+
 					'<div class="shipinfo-fittingbox-header">'+
-						this.name+' '+
+						'<span class="shipinfo-fittingbox-fitname">'+
+							this.name+' '+
+						'</span>'+
+						' '+
 						'<span class="shipinfo-fittingbox-shipname">'+
 							'<a href="javascript:void(0)" class="shipinfo-shiplink" onclick="EVEShipInfo.InfoPopup(\''+this.ship.id+'\')">'+
 								this.ship.name+
 							'</a>'+
 						'</span>'+
-						'<span class="shipinfo-fittingbox-closer" onclick="fobj'+this.linkID+'.Hide()">x</span>'+
 					'</div>'+
 					'<div class="shipinfo-fittingbox-content">'+
 						this.ExportHTML()+
 					'</div>'+
 					'<div class="shipinfo-fittingbox-toolbar">'+
-						'<a href="javascript:void(0)" onclick="jQuery(\'#'+this.jsID+'-praisalform\').submit()">EVEPraisal</a>'+
+						'<div class="shipinfo-dismiss" id="'+this.ElementID('dismiss')+'">&times;</div>'+
+						'<a href="javascript:void(0)" onclick="jQuery(\'#'+this.ElementID('praisalform')+'\').submit()">EVEPraisal</a>'+
 					'</div>'+
 					'<div style="display:none">'+
-						'<form action="http://evepraisal.com/estimate" method="post" target="_blank" id="'+this.jsID+'-praisalform">'+
+						'<form action="http://evepraisal.com/estimate" method="post" target="_blank" id="'+this.ElementID('praisalform')+'">'+
 							'<input type="hidden" name="raw_paste" value="'+this.ExportTextonly()+'"/>'+
 							'<input type="hidden" name="hide_buttons" value="false"/>'+
 							'<input type="hidden" name="paste_autosubmit" value="false"/>'+
@@ -71,6 +84,11 @@ var EVEShipInfo_Fitting = function(linkID, fittingID, name, shipName, shipID)
 			
 			link.after(html);
 			this.rendered = true;
+			
+			var fit = this;
+			this.Element('dismiss').on('click', function() {
+				fit.Hide();
+			});
 		} else {
 			jQuery('#'+this.jsID).show();
 		}

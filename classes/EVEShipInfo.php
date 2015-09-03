@@ -341,7 +341,61 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 	{
 	    $this->handle_initRewriteRules();
 	    $this->handle_initShortcodes();
+	    $this->handle_initThemes();
 	    $this->handle_initScripts();
+	}
+	
+	public function getThemeID()
+	{
+		return $this->getOption('theme', 'Light');
+	}
+	
+	public function setThemeID($id)
+	{
+		$this->setOption('theme', $id);
+	}
+	
+	public function getThemeLabel()
+	{
+		$id = $this->getThemeID();
+		return $this->themes[$id]['label'];
+	}
+	
+   /**
+    * Initializes the plugin's themes. A theme is only a single CSS file,
+    * (for ex. ThemeLight.css) which extends the base CSS file, 
+    * EVEShipInfo.css, which handles the base elements structure. 
+    */
+	protected function handle_initThemes()
+	{
+		$this->registerTheme(
+			'Light',
+			__('Light', 'EVEShipInfo'),
+			__('A theme for light themed blogs.', 'EVEShipInfo')	
+		);
+
+		$this->registerTheme(
+			'Dark',
+			__('Dark', 'EVEShipInfo'),
+			__('A theme for dark themed blogs.', 'EVEShipInfo')	
+		);
+	}
+	
+	protected $themes = array();
+	
+   /**
+    * Registers a frontend theme CSS.
+    * 
+    * @param string $id
+    * @param string $label
+    * @param string $description
+    */
+	protected function registerTheme($id, $label, $description)
+	{
+		$this->themes[$id] = array(
+			'label' => $label,
+			'description' => $description
+		);
 	}
 	
    /**
@@ -362,6 +416,15 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 		foreach($shortcodes as $instance) {
 			add_shortcode($instance->getTagName(), array($instance, 'handle_call'));
 		}
+	}
+	
+   /**
+    * Retrieves the definitions for all available themes.
+    * @return array
+    */
+	public function getThemes()
+	{
+		return $this->themes;
 	}
 	
    /**
@@ -468,10 +531,10 @@ class EVEShipInfo extends EVEShipInfo_Plugin
 		wp_enqueue_script('eveshipinfo_translation');
 		
 		wp_register_style('eveshipinfo', $this->getScriptURL('EVEShipInfo.css'));
-		wp_register_style('eveshipinfo_light', $this->getScriptURL('ThemeLight.css'), array('eveshipinfo'));
-		
 		wp_enqueue_style('eveshipinfo');
-		wp_enqueue_style('eveshipinfo_light');
+		
+		wp_register_style('eveshipinfo_theme', $this->getScriptURL('Theme'.$this->getThemeID().'.css'), array('eveshipinfo'));
+		wp_enqueue_style('eveshipinfo_theme');
 	}
 	
    /**
@@ -611,60 +674,54 @@ var EVEShipInfo_Translation = {".
 	    	array($this, 'handle_displayMainPage')
 	    );
 	    
-	    add_submenu_page(
-		    'eveshipinfo',
-		    __('Dashboard', 'EVEShipInfo'),
-		    __('Dashboard', 'EVEShipInfo'),
-		    'edit_posts',
-		    'eveshipinfo',
-		    array($this, 'handle_displayMainPage')
+	    $submenuPages = array(
+	    	array(
+	    		'navTitle' => __('Dashboard', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo', 
+	    		'callback' => array($this, 'handle_displayMainPage')
+	    	),
+	    	array(
+	    		'navTitle' => __('Themes', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo_themes', 
+	    		'callback' => array($this, 'handle_displayThemesPage')
+	    	),
+	    	array(
+	    		'navTitle' => __('Shortcodes', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo_shortcodes',
+	    		'callback' => array($this, 'handle_displayShortcodesPage')
+	    	),
+	    	array(
+	    		'navTitle' => __('EFT import', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo_eftimport',
+	    		'callback' => array($this, 'handle_displayEFTImportPage')
+	    	),
+	    	array(
+	    		'navTitle' => __('EFT fittings', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo_eftfittings',
+	    		'callback' => array($this, 'handle_displayEFTFittingsPage')
+	    	),
+	    	array(
+	    		'navTitle' => __('Database', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo_database',
+	    		'callback' => array($this, 'handle_displayDatabasePage')
+	    	),
+	    	/*array(
+	    		'navTitle' => __('Help', 'EVEShipInfo'),
+	    		'name' => 'eveshipinfo_help',
+	    		'callback' => array($this, 'handle_displayHelpPage')
+	    	),*/
 	    );
-	    
-	    add_submenu_page(
-		    'eveshipinfo',
-		    __('Help and Documentation', 'EVEShipInfo'),
-		    __('Help', 'EVEShipInfo'),
-		    'edit_posts',
-		    'eveshipinfo_help',
-		    array($this, 'handle_displayHelpPage')
-	    );
-	    
-	    add_submenu_page(
-	   		'eveshipinfo',
-		    __('Database reference', 'EVEShipInfo'),
-		    __('Database', 'EVEShipInfo'),
-		    'edit_posts',
-		    'eveshipinfo_database',
-		    array($this, 'handle_displayDatabasePage')
-	    );
-	    
-	    add_submenu_page(
-	    	'eveshipinfo',
-	    	__('Shortcodes reference', 'EVEShipInfo'),
-	    	__('Shortcodes', 'EVEShipInfo'),
-	    	'edit_posts',
-	    	'eveshipinfo_shortcodes',
-	    	array($this, 'handle_displayShortcodesPage')
-	    );
-
-	    add_submenu_page(
-	    'eveshipinfo',
-		    __('EFT import', 'EVEShipInfo'),
-		    __('EFT import', 'EVEShipInfo'),
-		    'edit_posts',
-		    'eveshipinfo_eftimport',
-		    array($this, 'handle_displayEFTImportPage')
-	    );
-	     
-	    $eft = $this->createEFTManager();
-    	add_submenu_page(
-	    	'eveshipinfo',
-	    	__('EFT fittings', 'EVEShipInfo'),
-	    	__('EFT fittings', 'EVEShipInfo'),
-	    	'edit_posts',
-	    	'eveshipinfo_eftfittings',
-	    	array($this, 'handle_displayEFTFittingsPage')
-    	);
+	 
+	    foreach($submenuPages as $page) {
+	    	add_submenu_page(
+	    		'eveshipinfo',
+	    		$page['navTitle'],
+	    		$page['navTitle'],
+	    		'edit_posts',
+	    		$page['name'],
+	    		$page['callback']
+	    	);
+	    }
 	}
 	
 	public function handle_displayMainPage($tabID=null)
@@ -674,6 +731,11 @@ var EVEShipInfo_Translation = {".
 			->display();
 	}
 
+	public function handle_displayThemesPage()
+	{
+	    $this->handle_displayMainPage('Themes');
+	}
+	
 	public function handle_displayShortcodesPage()
 	{
 	    $this->handle_displayMainPage('Shortcodes');

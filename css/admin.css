@@ -114,3 +114,8 @@ background:#ccc;
 margin-left:4px;
 margin-right:10px;
 }
+
+.radio-group-item{
+display:block;
+margin-bottom:8px;
+}

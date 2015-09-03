@@ -6,12 +6,13 @@ class EVEShipInfo_Admin_Page_Main extends EVEShipInfo_Admin_Page
 	{
 		$tabs = array(
 			'Dashboard' => __('Dashboard', 'EVEShipInfo'),
-        	'Help' => __('Help', 'EVEShipInfo'),
-        	'Database' => __('Database reference', 'EVEShipInfo'),
+			'Themes' => __('Themes', 'EVEShipInfo'),
         	'Shortcodes' => __('Shortcordes reference', 'EVEShipInfo'),
 			'EFTImport' => __('EFT import', 'EVEShipInfo'),
-		    'EFTFittings' => __('EFT fittings', 'EVEShipInfo')
-        );
+		    'EFTFittings' => __('EFT fittings', 'EVEShipInfo'),
+        	'Database' => __('Database reference', 'EVEShipInfo'),
+        	//'Help' => __('Help', 'EVEhipInfo')
+		);
 		
 		return $tabs;
 	}

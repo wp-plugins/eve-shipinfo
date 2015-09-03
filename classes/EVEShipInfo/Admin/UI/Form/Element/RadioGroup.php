@@ -24,7 +24,7 @@ class EVEShipInfo_Admin_UI_Form_Element_RadioGroup extends EVEShipInfo_Admin_UI_
 			$items[] = $item->render();
 		}
 			
-		return implode('<br/>', $items);
+		return implode('', $items);
 	}
 }
 
@@ -59,7 +59,7 @@ class EVEShipInfo_Admin_UI_Form_Element_RadioGroup_Item
 		}
 
 		return 
-		'<label>'.
+		'<label class="radio-group-item">'.
 			'<input'.$this->element->getPlugin()->compileAttributes($atts).'/> '.
 			$this->label.
 		'</label>';
