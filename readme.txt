@@ -7,16 +7,17 @@ Stable tag: 1.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-Puts an EVE Online ships database in your WordPress website, along with high quality screenshots and specialized shortcodes. Optionally also integrates with your EFT fittings collection.
+Puts an EVE Online ships and ship fittings database in your WordPress website, along with high quality screenshots and specialized shortcodes. 
 
 == Description ==
 
-Using shortcodes, you can link EVE Online ship names in your posts and show inline information about EVE Online ships, including custom ship screenshots independent from the EVE Online website. Each ship also gets its own, fully detailed page in your blog with virtual pages. All EVE Online ships are bundled, including the skinned variants (Abaddon Tash-Murkon Edition) and special edition ships (Mimir) or even those you cannot fly (Immovable Enigma).
+Using shortcodes, you can link EVE Online ship names in your posts and show inline information about EVE Online ships, including custom ship screenshots independent from the EVE Online website. Each ship also gets its own, fully detailed page in your blog with virtual pages. All EVE Online ships are bundled, including the skinned variants (Abaddon Tash-Murkon Edition) and special edition ships (Mimir) or even those you cannot fly (Immovable Enigma). With the EFT fittings management, import your fits from EFT and showcase your favorite fits with shortcodes.
 
 = Features =
 
-*   Portable EVE Online ships database with all 443 ships
-*   886 high quality custom ship screenshots (front/side)
+*   Portable EVE Online ships database with all 446 ships
+*   892 high quality custom ship screenshots (front/side)
+*   Integrated simple themes for light and dark layouts
 *   Link ship names to info popups or virtual ship pages within your blog
 *   Extremely customizable ship lists shortcode
 *   Ship galleries shortcode
@@ -48,6 +49,10 @@ example via FTP. You have to upload the "gallery" folder to the "eve-shipinfo" p
 
 
 == Changelog ==
+
+= 1.7 =
+* Updated data files for Vanguard expansion
+* Added support for theme switching, currently with a light and a dark theme
 
 = 1.6 =
 * Updated data files for Galatea expansion
